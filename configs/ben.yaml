@@ -1,0 +1,57 @@
+# lightning.pytorch==2.1.1
+seed_everything: 0
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: bf16
+  logger:
+    class_path: TensorBoardLogger
+    init_args:
+      save_dir: experiments
+      name: bigearthnet
+  callbacks:
+    - class_path: TQDMProgressBar
+    - class_path: LearningRateMonitor
+      init_args:
+        logging_interval: epoch
+
+  max_epochs: 10
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 50
+  enable_checkpointing: true
+  default_root_dir: experiments
+data:
+  class_path: datamodules.BigEarthNetV2DataModule
+  init_args:
+    batch_size: 4
+    num_workers: 12
+  dict_kwargs:
+    root: /share/projects/datasets/BigEarthNet/
+    # download: true
+
+model:
+  class_path: terratorch.tasks.MultiLabelClassificationTask
+  init_args:
+    model_factory: EncoderDecoderFactory
+    model_args:
+      backbone: timm_convnextv2_atto
+      backbone_pretrained: False
+      backbone_in_chans: 14
+      decoder: IdentityDecoder
+      num_classes: 19
+    loss: bce
+    ignore_index: -1
+    freeze_backbone: false
+    freeze_decoder: false 
+
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 1.e-4
+    weight_decay: 0.1
+# lr_scheduler:
+#   class_path: ReduceLROnPlateau
+#   init_args:
+#     monitor: val/loss

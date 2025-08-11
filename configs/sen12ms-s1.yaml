@@ -1,0 +1,35 @@
+config:
+  - configs/base/segmentation.yaml
+
+trainer:
+  logger.init_args.name: sen12ms-s1
+  max_epochs: 10
+  val_check_interval: 250
+
+data:
+  class_path: eosfm.datamodules.SEN12MSDataModule
+  init_args:
+    batch_size: 64
+    num_workers: 4
+    band_set: s1
+    pin_memory: true
+  dict_kwargs:
+    root: data/sen12ms
+
+model:
+  class_path: terratorch.tasks.SemanticSegmentationTask
+  init_args:
+    model_factory: EncoderDecoderFactory
+    model_args:
+      backbone: timm_convnextv2_atto
+      backbone_pretrained: True
+      decoder: UperNetDecoder
+      decoder_channels: 128
+      head_channel_list: [128]
+      head_dropout: 0.1
+      num_classes: 11
+    loss: dice
+    ignore_index: -1
+    freeze_backbone: false
+    freeze_decoder: false 
+    plot_on_val: false

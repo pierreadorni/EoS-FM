@@ -23,7 +23,7 @@ trainer:
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: datamodules.BigEarthNetV2DataModule
+  class_path: eosfm.datamodules.BigEarthNetV2DataModule
   init_args:
     batch_size: 4
     num_workers: 12

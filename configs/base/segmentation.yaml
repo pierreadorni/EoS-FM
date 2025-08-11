@@ -1,16 +1,17 @@
 # lightning.pytorch==2.1.1
+
 seed_everything: 0
 trainer:
   accelerator: auto
   strategy: auto
   devices: auto
   num_nodes: 1
-  precision: bf16
+  precision: bf16-mixed
   logger:
     class_path: TensorBoardLogger
     init_args:
       save_dir: experiments
-      name: bigearthnet-S1
+      name: CHANGE_THIS_TO_YOUR_EXPERIMENT_NAME
   callbacks:
     - class_path: TQDMProgressBar
     - class_path: LearningRateMonitor
@@ -18,34 +19,30 @@ trainer:
         logging_interval: epoch
 
   max_epochs: 10
-  check_val_every_n_epoch: 1
+  # check_val_every_n_epoch: 1
+  val_check_interval: 500
   log_every_n_steps: 50
   enable_checkpointing: true
   default_root_dir: experiments
-data:
-  class_path: eosfm.datamodules.BigEarthNetV2DataModule
-  init_args:
-    batch_size: 64
-    num_workers: 12
-    bands: 's1'
-  dict_kwargs:
-    root: /share/projects/datasets/BigEarthNet/
-    # download: true
+
 
 model:
-  class_path: terratorch.tasks.MultiLabelClassificationTask
+  class_path: terratorch.tasks.SemanticSegmentationTask
   init_args:
     model_factory: EncoderDecoderFactory
     model_args:
       backbone: timm_convnextv2_atto
       backbone_pretrained: True
-      backbone_in_chans: 3
-      decoder: IdentityDecoder
-      num_classes: 19
-    loss: bce
+      decoder: UperNetDecoder
+      decoder_channels: 128
+      head_channel_list: [128]
+      head_dropout: 0.1
+      num_classes: ???
+    loss: dice
     ignore_index: -1
     freeze_backbone: false
     freeze_decoder: false 
+    plot_on_val: false
 
 optimizer:
   class_path: torch.optim.AdamW

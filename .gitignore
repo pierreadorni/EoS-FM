@@ -5,4 +5,4 @@ data
 experiments
 *.pth
 credentials.json
-
+slurm-*.out

@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eosfm"
+version = "0.1.0"
+description = "EoS-FM package"
+readme = "README.md"
+requires-python = ">=3.8"
+
+[tool.setuptools.packages.find]
+include = ["eosfm*"]
+exclude = ["notebooks*", "experiments*"]

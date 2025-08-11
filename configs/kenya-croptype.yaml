@@ -23,7 +23,7 @@ trainer:
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: datamodules.CV4AKenyaCropTypeDataModule
+  class_path: eosfm.datamodules.CV4AKenyaCropTypeDataModule
   init_args:
     batch_size: 32
     patch_size: 512

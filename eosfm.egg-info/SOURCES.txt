@@ -1,0 +1,14 @@
+README.md
+pyproject.toml
+eosfm.egg-info/PKG-INFO
+eosfm.egg-info/SOURCES.txt
+eosfm.egg-info/dependency_links.txt
+eosfm.egg-info/top_level.txt
+eosfm/datamodules/__init__.py
+eosfm/datamodules/bigearthnetv2.py
+eosfm/datamodules/caffe.py
+eosfm/datamodules/dfc2022.py
+eosfm/datamodules/dior.py
+eosfm/datamodules/etci2021.py
+eosfm/datamodules/kenya_croptype.py
+eosfm/tasks/multilabel_classification.py

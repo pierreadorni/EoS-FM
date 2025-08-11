@@ -10,7 +10,7 @@ trainer:
     class_path: TensorBoardLogger
     init_args:
       save_dir: experiments
-      name: deepglobe-lcc
+      name: dfc2022
   callbacks:
     - class_path: TQDMProgressBar
     - class_path: LearningRateMonitor
@@ -23,32 +23,32 @@ trainer:
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: torchgeo.datamodules.DeepGlobeLandCoverDataModule
+  class_path: eosfm.datamodules.dfc2022.DFC2022DataModule
   init_args:
     batch_size: 32
-    patch_size: 512
-    num_workers: 8
+    num_workers: 24
   dict_kwargs:
-    root: data/deepglobe2018-lcc
+    root: data/dfc2022
 
 model:
   class_path: terratorch.tasks.SemanticSegmentationTask
   init_args:
-    model_factory: EncoderDecoderFactory
-    model_args:
-      backbone: timm_convnextv2_atto
-      backbone_pretrained: True
-      decoder: UperNetDecoder
-      decoder_channels: 128
-      head_channel_list: [128]
-      head_dropout: 0.1
-      num_classes: 7
-    loss: dice
-    ignore_index: -1
-    freeze_backbone: false
-    freeze_decoder: false 
-    plot_on_val: false
-
+      model_factory: EncoderDecoderFactory
+      model_args:
+        backbone: timm_convnextv2_atto
+        backbone_pretrained: True
+        backbone_in_chans: 4
+        decoder: UperNetDecoder
+        decoder_channels: 128
+        head_channel_list: [128]
+        head_dropout: 0.1
+        num_classes: 16
+      loss: dice
+      ignore_index: -1
+      freeze_backbone: false
+      freeze_decoder: false 
+      plot_on_val: false
+    
 optimizer:
   class_path: torch.optim.AdamW
   init_args:
@@ -58,3 +58,4 @@ optimizer:
 #   class_path: ReduceLROnPlateau
 #   init_args:
 #     monitor: val/loss
+

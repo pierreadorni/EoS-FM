@@ -7,11 +7,14 @@ import sys
 
 from huggingface_hub import hf_hub_download
 from codecarbon import track_emissions
-
 from terratorch.cli_tools import build_lightning_cli
 import torch
 
-torch.set_float32_matmul_precision('medium')
+# import the EosFM to force the registration of the EosFM model in the TERRATORCH_BACKBONE_REGISTRY,
+# even though it is not used in the CLI
+from eosfm.encoder import EosFM
+
+torch.set_float32_matmul_precision("medium")
 
 try:
     from benchmark.main import main as iterate_main
@@ -22,7 +25,7 @@ except ImportError:
     TERRATORCH_ITERATE_INSTALLED = False
 
 
-@track_emissions(log_level='warning')
+@track_emissions(log_level="warning")
 def main():
     if len(sys.argv) == 1:
         print(

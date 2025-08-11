@@ -23,7 +23,7 @@ trainer:
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: datamodules.ETCI2021DataModule
+  class_path: eosfm.datamodules.ETCI2021DataModule
   init_args:
     batch_size: 512
     num_workers: 4

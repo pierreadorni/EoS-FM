@@ -6,3 +6,7 @@ experiments
 *.pth
 credentials.json
 slurm-*.out
+logs/*
+.github/*
+emissions.csv
+*.sbatch

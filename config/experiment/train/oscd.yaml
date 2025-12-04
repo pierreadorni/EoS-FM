@@ -1,0 +1,25 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: torchgeo.datamodules.OSCDDataModule
+  batch_size: 32
+  patch_size: 64
+  num_workers: 4
+  root: data/oscd
+  download: true
+
+trainer:
+  max_epochs: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 50
+
+logger:
+  name: oscd
+
+model:
+  model_args:
+    num_classes: 2
+    backbone_in_chans: 6
+  loss: dice

@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - override /model: change_detection
+
+data:
+  _target_: torchgeo.datamodules.LEVIRCDPlusDataModule
+  batch_size: 16
+  patch_size: 1024
+  val_split_pct: 0.2
+  num_workers: 8
+  root: data/levircdplus
+  download: true
+
+trainer:
+  max_epochs: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 10
+
+logger:
+  name: levircdplus
+
+model:
+  model_args:
+    num_classes: 2

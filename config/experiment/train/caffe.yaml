@@ -1,0 +1,23 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: eosfm.datamodules.CaFFeDataModule
+  batch_size: 32
+  num_workers: 24
+  root: data/caffe
+  download: true
+
+trainer:
+  max_epochs: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 50
+
+logger:
+  name: caffe
+
+model:
+  model_args:
+    num_classes: 7
+  loss: dice

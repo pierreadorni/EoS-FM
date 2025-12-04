@@ -1,0 +1,25 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: eosfm.datamodules.SEN12MSDataModule
+  batch_size: 32
+  num_workers: 4
+  band_set: s2-all
+  pin_memory: true
+  root: data/sen12ms
+
+trainer:
+  max_epochs: 10
+  val_check_interval: 0.5
+
+logger:
+  name: sen12ms-s2
+
+model:
+  model_args:
+    num_classes: 11
+    backbone_pretrained: False
+    backbone_in_chans: 13
+  loss: dice

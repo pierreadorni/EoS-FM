@@ -1,0 +1,23 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: torchgeo.datamodules.LandCoverAIDataModule
+  batch_size: 64
+  num_workers: 8
+  root: data
+  download: true
+
+trainer:
+  max_epochs: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 10
+
+logger:
+  name: landcoverai
+
+model:
+  model_args:
+    num_classes: 5
+  loss: ce

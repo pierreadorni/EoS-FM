@@ -1,0 +1,13 @@
+_target_: terratorch.tasks.ClassificationTask
+model_factory: EncoderDecoderFactory
+model_args:
+  backbone: timm_convnextv2_atto
+  backbone_pretrained: True
+  decoder: IdentityDecoder
+  num_classes: ???
+ignore_index: -1
+freeze_backbone: false
+freeze_decoder: false
+optimizer: AdamW
+lr: 1.e-4
+optimizer_hparams: {}

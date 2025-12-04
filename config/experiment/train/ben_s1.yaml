@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - override /model: multilabel_classification
+
+data:
+  _target_: eosfm.datamodules.BigEarthNetV2DataModule
+  batch_size: 64
+  num_workers: 12
+  bands: 's1'
+  root: /share/projects/datasets/BigEarthNet/
+
+trainer:
+  max_epochs: 10
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 50
+
+logger:
+  name: bigearthnet-S1
+
+model:
+  model_args:
+    backbone_pretrained: True
+    backbone_in_chans: 3
+    num_classes: 19

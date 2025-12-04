@@ -1,0 +1,15 @@
+_target_: eosfm.tasks.ChangeDetectionTask
+model_factory: ChangeDetectionEncoderDecoderFactory
+model_args:
+  backbone: timm_convnextv2_atto
+  backbone_pretrained: True
+  decoder: UperNetDecoder
+  decoder_channels: 128
+  head_channel_list: [128]
+  head_dropout: 0.1
+  num_classes: ???
+loss: ce
+ignore_index: -1
+optimizer: AdamW
+lr: 1.e-4
+optimizer_hparams: {}

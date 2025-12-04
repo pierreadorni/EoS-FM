@@ -1,0 +1,23 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: torchgeo.datamodules.DeepGlobeLandCoverDataModule
+  batch_size: 32
+  patch_size: 512
+  num_workers: 8
+  root: data/deepglobe2018-lcc
+
+trainer:
+  max_epochs: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 50
+
+logger:
+  name: deepglobe-lcc
+
+model:
+  model_args:
+    num_classes: 7
+  loss: dice

@@ -1,0 +1,22 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: eosfm.datamodules.SEN12MSDataModule
+  batch_size: 64
+  num_workers: 4
+  band_set: rgb
+  pin_memory: true
+  root: data/sen12ms
+
+trainer:
+  max_epochs: 20
+  val_check_interval: 0.5
+
+logger:
+  name: sen12ms-rgb
+
+model:
+  model_args:
+    num_classes: 11

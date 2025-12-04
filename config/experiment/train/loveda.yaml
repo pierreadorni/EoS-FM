@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: torchgeo.datamodules.LoveDADataModule
+  batch_size: 16
+  num_workers: 8
+  root: data/loveda
+  download: true
+
+trainer:
+  max_epochs: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 10
+
+logger:
+  name: loveda
+
+model:
+  model_args:
+    num_classes: 8
+  ignore_index: 0
+  loss: ce

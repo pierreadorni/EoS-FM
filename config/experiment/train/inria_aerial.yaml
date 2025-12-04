@@ -1,0 +1,25 @@
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: eosfm.datamodules.InriaAerialDataModule
+  batch_size: 16
+  tile_size: 512
+  stride: 512
+  num_workers: 8
+  pin_memory: true
+  root: data
+
+trainer:
+  max_epochs: 20
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 10
+
+logger:
+  name: inria_aerial
+
+model:
+  model_args:
+    num_classes: 2
+  loss: ce

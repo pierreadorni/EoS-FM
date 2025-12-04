@@ -19,9 +19,9 @@ EoS-FM addresses a fundamental question in remote sensing foundation models: rat
 
 The `EosFM` encoder implements a **late fusion ensemble** approach:
 - **Specialist Models**: Multiple pre-trained backbone networks, each trained on different datasets and band combinations (RGB, multispectral, SAR)
-- **Band Adaptation Layer**: Automatically adapts input bands to match each specialist's requirements using learned or rule-based strategies
+- **Band Adaptation Layer**: Automatically adapts input bands to match each specialist's requirements using rule-based strategies
 - **Feature Concatenation**: Combines specialist features channel-wise at each pyramid level for downstream decoders
-- **Mixed-Modality Support**: Seamlessly handles optical, SAR, and multispectral inputs
+- **Encoder Selection Layer**: Selects an optimal subset of encoders to automatically prune the encoder at training time
 
 ## Installation
 
@@ -130,8 +130,6 @@ model:
 
 The ensemble file format is a list of tuples: `[(in_chans, state_dict, config), ...]`
 
-#### Using utils.py (Recommended)
-
 The `utils.py` script provides utilities to load and export ensemble models from a folder of trained Lightning checkpoints:
 
 ```bash
@@ -147,100 +145,6 @@ This command:
 - Automatically detects the input channels and backbone architecture
 - Saves them in the correct ensemble format
 
-#### Manual Creation
-
-Alternatively, you can create the ensemble file manually:
-
-```python
-import torch
-
-# Extract from trained Lightning checkpoints
-specialists = []
-for ckpt_path in specialist_checkpoints:
-    checkpoint = torch.load(ckpt_path)
-    config = checkpoint['hyper_parameters']['model_args']
-    
-    # Extract encoder state dict
-    state_dict = {
-        k.removeprefix('model.encoder.'): v 
-        for k, v in checkpoint['state_dict'].items() 
-        if k.startswith('model.encoder.')
-    }
-    
-    specialists.append((
-        config.get('backbone_in_chans', 3),  # Number of input bands
-        state_dict,
-        {'backbone': config['backbone'], 'name': 'specialist_name'}
-    ))
-
-# Save ensemble
-torch.save(specialists, 'eosfm_ensemble.pth')
-```
-
-## Project Structure
-
-```
-ensemble/
-├── eosfm/                      # Main package
-│   ├── encoder.py              # EosFM ensemble encoder
-│   ├── band_adaptation.py      # Band adaptation strategies
-│   └── datamodules/            # Custom dataset implementations
-│       ├── base.py             # Base datamodule with pin_memory
-│       ├── potsdam.py          # Efficient tiling for large images
-│       ├── minifrance.py       # Land cover segmentation
-│       ├── sen12ms.py          # Multi-modal Sentinel-1/2
-│       └── ...
-├── configs/                    # Training configurations
-│   ├── potsdam.yaml            # Potsdam semantic segmentation
-│   ├── sen12ms-all.yaml        # SEN12MS all bands
-│   └── ...
-├── experiments/                # Training outputs (checkpoints, logs)
-├── data/                       # Dataset storage
-└── terratorch_co2.py          # Training CLI with carbon tracking
-```
-
-## Key Features
-
-### 1. Band Adaptation System
-
-Automatically adapts between different band combinations:
-
-```python
-from eosfm.band_adaptation import register_strategy, BandAdaptationStrategy
-
-@register_strategy
-class CustomAdaptation(BandAdaptationStrategy):
-    required_bands = 3  # What encoder expects
-    available_bands = 13  # What your data has
-    
-    def adapt(self, features: torch.Tensor) -> torch.Tensor:
-        # Select/transform bands as needed
-        return features[:, [3, 2, 1], :, :]
-```
-
-Built-in adaptations:
-- Sentinel-2 → RGB (S212toRGB, S213ToRGB)
-- SAR → RGB composite (SARtoRGB)
-- Sentinel-1&2 → Sentinel-2 (S12ToS212)
-- And more...
-
-### 2. Multi-Modal Support
-
-Datasets can provide different modalities, handled via batch transfer hooks:
-
-```python
-def on_before_batch_transfer(self, batch, dataloader_idx):
-    # Combine Sentinel-1 and Sentinel-2
-    if 'image_s1' in batch and 'image_s2' in batch:
-        batch['image'] = torch.cat([batch['image_s1'], batch['image_s2']], dim=1)
-    
-    # Create SAR RGB composite
-    if batch['image'].shape[1] == 2:  # VV, VH channels
-        vv, vh = batch['image'][:, 0:1], batch['image'][:, 1:2]
-        batch['image'] = torch.cat([vv, vh, vh], dim=1)
-    
-    return batch
-```
 
 ## Supported Datasets
 
@@ -256,50 +160,6 @@ Also supports TorchGeo datasets: EuroSAT, DeepGlobe, FireRisk, OSCD, etc.
 
 ## Creating Custom Datasets
 
-### For Large Images (>1000×1000)
-
-Follow the `Potsdam2D` pattern:
-
-```python
-class MyLargeImageDataset(NonGeoDataset):
-    def __init__(self, root, split, tile_size=512, stride=None, use_tiling=True):
-        self.tile_size = tile_size
-        self.stride = stride or tile_size
-        self.use_tiling = use_tiling
-        
-        if use_tiling:
-            self.tiles = self._create_tiles()  # Pre-compute tile positions
-        else:
-            self.tiles = None  # Random cropping
-    
-    def _create_tiles(self):
-        tiles = []
-        for file_idx, file_info in enumerate(self.files):
-            with rasterio.open(file_info['image']) as src:
-                width, height = src.width, src.height
-            for y in range(0, height - self.tile_size + 1, self.stride):
-                for x in range(0, width - self.tile_size + 1, self.stride):
-                    tiles.append({'file_index': file_idx, 'x': x, 'y': y})
-        return tiles
-    
-    def __getitem__(self, index):
-        if self.use_tiling:
-            # Validation: systematic tiling
-            tile = self.tiles[index]
-            window = Window(tile['x'], tile['y'], self.tile_size, self.tile_size)
-        else:
-            # Training: random crop
-            file = self.files[index % len(self.files)]
-            # ... random x, y ...
-            window = Window(x, y, self.tile_size, self.tile_size)
-        
-        with rasterio.open(file['image']) as src:
-            image = src.read(window=window)
-        # ... process and return
-```
-
-### DataModule
-
 ```python
 class MyDataModule(PinNonGeoDataModule):
     def setup(self, stage):
@@ -311,36 +171,6 @@ class MyDataModule(PinNonGeoDataModule):
 ## Configuration
 
 Configurations use **Hydra** for composable, modular setup. Each experiment is self-contained with data, model, and trainer configurations.
-
-### Directory Structure
-
-```
-config/
-├── config.yaml                 # Base configuration
-├── model/                      # Model configurations (segmentation, classification, etc.)
-│   ├── segmentation.yaml
-│   ├── multilabel_classification.yaml
-│   ├── classification.yaml
-│   ├── object_detection.yaml
-│   ├── change_detection.yaml
-│   └── pixelwise_regression.yaml
-├── trainer/                    # Trainer settings
-│   └── default.yaml
-├── logger/                     # Logger configurations
-│   └── tensorboard.yaml
-├── callbacks/                  # Callback configurations
-│   └── default.yaml
-└── experiment/                 # Experiment configs (combine data + model + trainer)
-    ├── train/
-    │   ├── ben_rgb.yaml
-    │   ├── caffe.yaml
-    │   ├── cloud_cover.yaml
-    │   ├── potsdam.yaml
-    │   ├── sen12ms_rgb.yaml
-    │   └── ... (24 total experiments)
-    └── test/
-        └── eurosat.yaml
-```
 
 ### Example Experiment Configuration
 

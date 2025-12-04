@@ -5,9 +5,6 @@
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa] [![arXiv](https://img.shields.io/badge/arXiv-2511.21523-b31b1b.svg)](https://arxiv.org/abs/2511.21523)
 </div>
 
-**Paper**: [arXiv:2511.21523v1](https://arxiv.org/abs/2511.21523)
-**License**: CC BY-NC-SA 4.0
-
 <p align='center'>
   <img src="https://github.com/user-attachments/assets/8a4e9f7f-6fdf-42f3-a4b7-879343024962" width="80%"/>
 </p>

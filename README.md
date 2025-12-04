@@ -42,104 +42,84 @@ pip install terratorch torchgeo lightning rasterio torch torchvision
 source venv/bin/activate
 export PYTHONPATH=$(pwd):$PYTHONPATH
 
-# Train on a dataset (e.g., Potsdam)
-python terratorch_co2.py fit --config configs/potsdam.yaml
+# Train on a dataset (e.g., Cloud Cover)
+python run.py experiment=train/cloud_cover
+
+# List all available experiments
+python run.py --help | grep "experiment"
+
+# Available experiments: ben_rgb, ben_s1, ben_all, caffe, cloud_cover, deepglobe_lcc, 
+# dfc2022, dior, etci2021, eurosat_rgb, eurosat_s2, firerisk, inria_aerial, 
+# kenya_croptype, landcoverai, levircdplus, loveda, minifrance, opencanopy, oscd, 
+# potsdam, sen12ms_rgb, sen12ms_s1, sen12ms_s2, sen12ms_all
+```
+
+### Dry Run (Verify Configuration)
+
+```bash
+# Check that configuration is valid without training
+python run.py experiment=train/potsdam train=false
 ```
 
 ### Using EosFM Ensemble Backbone
 
 ```yaml
-# In your config YAML
+# Example: in conf/experiment/my_experiment.yaml
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: eosfm.datamodules.MyDataModule
+  batch_size: 32
+  num_workers: 8
+  root: /path/to/data
+
+trainer:
+  max_epochs: 100
+  accelerator: auto
+  devices: auto
+  precision: bf16-mixed
+
+logger:
+  name: my_experiment
+
 model:
-  class_path: terratorch.tasks.SemanticSegmentationTask
-  init_args:
-    model_factory: EncoderDecoderFactory
-    model_args:
-      backbone: EosFM
-      backbone_in_chans: 3
-      model_weights: path/to/eosfm_ensemble.pth
-      freeze: true  # Freeze encoders during training (recommended)
-    
-      normalize_features: true  # Apply feature normalization before fusion
-      normalization_type: "batch"  # "batch" for BatchNorm2d, "layer" for LayerNorm
-      projection_layer: false  # Add Conv2d 1x1 + LeakyReLU after normalization
-      
-      feature_fusion: null  # Options: null, "conv1x1", "mlp", "addition", "multiplication"
-      fuse_to_mult: 1  # Multiplier for output channels (used with conv1x1/mlp)
-      
-      max_encoders: null  # Set to k to select only top-k encoders (e.g., 5)
-      encoder_selection_mode: "topk"  # "topk" for hard selection, "smooth" for soft weighting
-      scale_features: false  # Whether to scale features by selection weights
-      
-      ablate_encoders: []  # List of encoder indices to disable (e.g., [0, 3, 7])
-      
-      decoder: UperNetDecoder
-      num_classes: 6
+  model_args:
+    backbone: EosFM
+    backbone_in_chans: 3
+    model_weights: models/eosfm.pth
+    freeze: true  # Freeze encoders during training (recommended)
+    num_classes: 6
+  loss: dice
 ```
 
 #### Advanced Feature Fusion Examples
 
 **1. Basic Concatenation (Default)**
 ```yaml
-model_args:
-  backbone: EosFM
-  feature_fusion: null  # Simply concatenates all encoder features
-  normalize_features: true  # Recommended for stable training
+model:
+  model_args:
+    backbone: EosFM
+    num_classes: 6
 ```
 
-**2. Dimensionality Reduction with Conv1x1**
+**2. Encoder Selection with Top-K**
 ```yaml
-model_args:
-  backbone: EosFM
-  feature_fusion: "conv1x1"  # Reduces concatenated features
-  fuse_to_mult: 2  # Output = 2 × single_encoder_channels
-  normalize_features: true
+model:
+  model_args:
+    backbone: EosFM
+    max_encoders: 5  # Select only 5 most relevant encoders
+    num_classes: 6
 ```
 
-**3. Non-linear Fusion with MLP**
+**3. Feature Normalization**
 ```yaml
-model_args:
-  backbone: EosFM
-  feature_fusion: "mlp"  # Two-layer MLP with ReLU
-  fuse_to_mult: 1  # Match single encoder dimensions
-  normalize_features: true
-  projection_layer: true  # Additional learnable projection per encoder
-```
-
-**4. Addition/Multiplication Fusion** (requires all encoders to have same output dimensions)
-```yaml
-model_args:
-  backbone: EosFM
-  feature_fusion: "addition"  # or "multiplication"
-  normalize_features: true  # Critical for these modes
-```
-
-**5. Encoder Selection with Top-K**
-```yaml
-model_args:
-  backbone: EosFM
-  max_encoders: 5  # Select only 5 most relevant encoders
-  encoder_selection_mode: "topk"  # Hard selection
-  scale_features: false  # Binary mask (selected=1, others=0)
-  normalize_features: true
-```
-
-**6. Smooth Encoder Selection** (use with sparsity regularization)
-```yaml
-model_args:
-  backbone: EosFM
-  max_encoders: 5  # Target number of encoders
-  encoder_selection_mode: "smooth"  # Soft weighting with sigmoid
-  scale_features: true  # Weight features by learned importance
-  normalize_features: true
-```
-
-**7. Ablation Study Configuration**
-```yaml
-model_args:
-  backbone: EosFM
-  ablate_encoders: [0, 3, 7]  # Disable encoders 0, 3, and 7
-  # Useful for analyzing individual encoder contributions
+model:
+  model_args:
+    backbone: EosFM
+    normalize_features: true
+    normalization_type: "batch"  # "batch" or "layer"
+    num_classes: 6
 ```
 
 ### Creating Ensemble .pth Files
@@ -326,48 +306,118 @@ class MyDataModule(PinNonGeoDataModule):
 
 ## Configuration
 
-Training configs use PyTorch Lightning CLI format (`configs/*.yaml`):
+Configurations use **Hydra** for composable, modular setup. Each experiment is self-contained with data, model, and trainer configurations.
+
+### Directory Structure
+
+```
+config/
+├── config.yaml                 # Base configuration
+├── model/                      # Model configurations (segmentation, classification, etc.)
+│   ├── segmentation.yaml
+│   ├── multilabel_classification.yaml
+│   ├── classification.yaml
+│   ├── object_detection.yaml
+│   ├── change_detection.yaml
+│   └── pixelwise_regression.yaml
+├── trainer/                    # Trainer settings
+│   └── default.yaml
+├── logger/                     # Logger configurations
+│   └── tensorboard.yaml
+├── callbacks/                  # Callback configurations
+│   └── default.yaml
+└── experiment/                 # Experiment configs (combine data + model + trainer)
+    ├── train/
+    │   ├── ben_rgb.yaml
+    │   ├── caffe.yaml
+    │   ├── cloud_cover.yaml
+    │   ├── potsdam.yaml
+    │   ├── sen12ms_rgb.yaml
+    │   └── ... (24 total experiments)
+    └── test/
+        └── eurosat.yaml
+```
+
+### Example Experiment Configuration
+
+Each experiment is a minimal YAML file that specifies data, model, and training settings:
 
 ```yaml
-seed_everything: 0
-
-trainer:
-  accelerator: auto
-  devices: auto
-  precision: bf16-mixed
-  max_epochs: 10
-  logger:
-    class_path: TensorBoardLogger
-    init_args:
-      save_dir: experiments
-      name: my_experiment
+# config/experiment/train/cloud_cover.yaml
+# @package _global_
+defaults:
+  - override /model: segmentation
 
 data:
-  class_path: eosfm.datamodules.MyDataModule
-  init_args:
-    batch_size: 8
-    tile_size: 512
-    num_workers: 4
-  dict_kwargs:
-    root: /path/to/data
+  _target_: eosfm.datamodules.CloudCoverDetectionDataModule
+  batch_size: 32
+  num_workers: 4
+  root: data/cloud_cover
+
+trainer:
+  max_epochs: 20
+  check_val_every_n_epoch: 1
+
+logger:
+  name: cloud_cover
 
 model:
-  class_path: terratorch.tasks.SemanticSegmentationTask
-  init_args:
-    model_args:
-      backbone: EosFM  # or timm_convnextv2_atto, etc.
-      backbone_in_chans: 3
-      model_weights: models/eosfm.pth
-      decoder: UperNetDecoder
-      num_classes: 6
-    loss: dice
-    freeze_backbone: false
+  model_args:
+    num_classes: 2
+  loss: ce
+```
 
-optimizer:
-  class_path: torch.optim.AdamW
-  init_args:
-    lr: 1.e-4
-    weight_decay: 0.1
+### Creating Custom Experiments
+
+1. Create a new YAML file in `config/experiment/train/`:
+
+```yaml
+# config/experiment/train/my_dataset.yaml
+# @package _global_
+defaults:
+  - override /model: segmentation
+
+data:
+  _target_: my.custom.DataModule
+  batch_size: 32
+  num_workers: 8
+  root: /path/to/data
+
+trainer:
+  max_epochs: 100
+
+logger:
+  name: my_dataset
+
+model:
+  model_args:
+    num_classes: 10
+    backbone: timm_convnextv2_atto
+  loss: dice
+```
+
+2. Run the experiment:
+
+```bash
+python run.py experiment=train/my_dataset
+
+# Or override specific settings from CLI:
+python run.py experiment=train/my_dataset trainer.max_epochs=50 data.batch_size=64
+```
+
+### Command Line Overrides
+
+Override any configuration value from the command line:
+
+```bash
+# Override epochs, batch size, learning rate
+python run.py experiment=train/potsdam trainer.max_epochs=200 data.batch_size=16
+
+# Disable training, only validate
+python run.py experiment=train/potsdam train=false
+
+# Run a dry run to verify configuration
+python run.py experiment=train/potsdam train=false test=false --cfg job
 ```
 
 ## Carbon Tracking

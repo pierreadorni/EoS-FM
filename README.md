@@ -5,6 +5,10 @@
 **Paper**: [arXiv:2511.21523v1](https://arxiv.org/abs/2511.21523)
 **License**: CC BY-NC-SA 4.0
 
+<p align='center'>
+  <img src="https://github.com/user-attachments/assets/8a4e9f7f-6fdf-42f3-a4b7-879343024962" width="80%"/>
+</p>
+
 An ensemble foundation model for Earth Observation that aggregates features from multiple specialist backbone encoders to achieve generalist capabilities across diverse remote sensing tasks.
 
 ## Overview

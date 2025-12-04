@@ -5,6 +5,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataloader import default_collate
 from torch import Tensor
 
+
 class PinNonGeoDataModule(BaseDataModule):
     """Base class for data modules lacking geospatial information.
 
@@ -44,17 +45,17 @@ class PinNonGeoDataModule(BaseDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ['fit']:
+        if stage in ["fit"]:
             self.train_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='train', **self.kwargs
+                split="train", **self.kwargs
             )
-        if stage in ['fit', 'validate']:
+        if stage in ["fit", "validate"]:
             self.val_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='val', **self.kwargs
+                split="val", **self.kwargs
             )
-        if stage in ['test']:
+        if stage in ["test"]:
             self.test_dataset = self.dataset_class(  # type: ignore[call-arg]
-                split='test', **self.kwargs
+                split="test", **self.kwargs
             )
 
     def _dataloader_factory(self, split: str) -> DataLoader[dict[str, Tensor]]:
@@ -70,19 +71,19 @@ class PinNonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset or sampler, or if the dataset or sampler has length 0.
         """
-        dataset = self._valid_attribute(f'{split}_dataset', 'dataset')
-        batch_size = self._valid_attribute(f'{split}_batch_size', 'batch_size')
+        dataset = self._valid_attribute(f"{split}_dataset", "dataset")
+        batch_size = self._valid_attribute(f"{split}_batch_size", "batch_size")
 
         return DataLoader(
             dataset=dataset,
             batch_size=batch_size,
-            shuffle=split == 'train',
+            shuffle=split == "train",
             num_workers=self.num_workers,
             collate_fn=self.collate_fn,
             persistent_workers=self.num_workers > 0,
             pin_memory=self.pin_memory,
-            prefetch_factor=1,
-            timeout=30
+            prefetch_factor=1 if self.num_workers > 0 else None,
+            timeout=30 if self.num_workers > 0 else 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:
@@ -95,7 +96,7 @@ class PinNonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory('train')
+        return self._dataloader_factory("train")
 
     def val_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for validation.
@@ -107,7 +108,7 @@ class PinNonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory('val')
+        return self._dataloader_factory("val")
 
     def test_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for testing.
@@ -119,7 +120,7 @@ class PinNonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory('test')
+        return self._dataloader_factory("test")
 
     def predict_dataloader(self) -> DataLoader[dict[str, Tensor]]:
         """Implement one or more PyTorch DataLoaders for prediction.
@@ -131,4 +132,4 @@ class PinNonGeoDataModule(BaseDataModule):
             MisconfigurationException: If :meth:`setup` does not define a
                 dataset, or if the dataset has length 0.
         """
-        return self._dataloader_factory('predict')
+        return self._dataloader_factory("predict")

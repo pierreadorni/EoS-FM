@@ -69,7 +69,7 @@ class BigEarthNetV2DataModule(NonGeoDataModule):
         Args:
             batch_size: Size of each mini-batch.
             num_workers: Number of workers for parallel data loading.
-            bands: Bands to load. One of {s1, s2, all}.
+            bands: Bands to load. One of {s1, s2, all, rgb}.
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.BigEarthNetV2`.
         """
@@ -108,11 +108,15 @@ class BigEarthNetV2DataModule(NonGeoDataModule):
 
         if self.bands == 's1':
             # create 3-channel composite from Sentinel-1 bands
-
             batch["image"] = torch.stack(
                 [batch["image"][:, 0], batch["image"][:, 1], batch["image"][:, 1]], dim=1
             )
 
+        # if self.bands == 'rgb':
+        #     # extract 3-channel RGB from Sentinel-2 bands
+        #     batch["image"] = torch.stack(
+        #         [batch["image"][:, 3], batch["image"][:, 2], batch["image"][:, 1]], dim=1
+        #     )
 
         del batch["mask"]  # Remove mask bc we do classification, not segmentation
         batch['label'] = batch['label'].float()  # Ensure label is float for BCE loss
@@ -272,7 +276,7 @@ class BigEarthNetV2(NonGeoDataset):
             AssertionError: If *split*, or *bands*, are not valid.
         """
         assert split in self.valid_splits, f'split must be one of {self.valid_splits}'
-        assert bands in ['s1', 's2', 'all']
+        assert bands in ['s1', 's2', 'all', 'rgb']
         self.root = root
         self.split = split
         self.bands = bands
@@ -318,6 +322,14 @@ class BigEarthNetV2(NonGeoDataset):
                 sample['image'] = self._load_image(index, 's1')
             case 's2':
                 sample['image'] = self._load_image(index, 's2')
+            case 'rgb':
+                sample['image'] = self._load_image(index, 's2')
+                # extract 3-channel RGB from Sentinel-2 bands
+                # print(sample['image'].shape)
+                sample['image'] = torch.stack(
+                    [sample['image'][3], sample['image'][2], sample['image'][1]], dim=0
+                )
+                # print(sample['image'].shape)
             case 'all':
                 sample['image_s1'] = self._load_image(index, 's1')
                 sample['image_s2'] = self._load_image(index, 's2')

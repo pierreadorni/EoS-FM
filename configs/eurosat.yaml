@@ -43,7 +43,7 @@ model:
     # loss: mse
     ignore_index: -1
     freeze_backbone: false
-    freeze_decoder: false 
+    freeze_decoder: false
 
 optimizer:
   class_path: torch.optim.AdamW

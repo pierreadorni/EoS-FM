@@ -17,7 +17,7 @@ trainer:
       init_args:
         logging_interval: epoch
 
-  max_epochs: 10
+  max_epochs: 20
   check_val_every_n_epoch: 1
   log_every_n_steps: 50
   enable_checkpointing: true
@@ -25,8 +25,8 @@ trainer:
 data:
   class_path: torchgeo.datamodules.EuroSATDataModule
   init_args:
-    batch_size: 64
-    num_workers: 0
+    batch_size: 128
+    num_workers: 4
     bands: 
       - B01
       - B02
@@ -50,15 +50,19 @@ model:
     model_factory: EncoderDecoderFactory
     model_args:
       backbone: EosFM
-      backbone_encoders_folder: experiments
+      backbone_model_weights: eosfm-pro-max.pth
       backbone_device: cuda
       backbone_in_chans: 13
+      backbone_freeze: true
+      backbone_normalize_features: true
+      backbone_normalization_type: batch
+      backbone_feature_fusion: conv1x1
       decoder: IdentityDecoder
       num_classes: 10
     # loss: mse
     ignore_index: -1
-    freeze_backbone: true
-    freeze_decoder: false 
+    # freeze_backbone: true
+    # freeze_decoder: false 
 
 optimizer:
   class_path: torch.optim.AdamW

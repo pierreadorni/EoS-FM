@@ -10,7 +10,7 @@ trainer:
     class_path: TensorBoardLogger
     init_args:
       save_dir: experiments
-      name: etci2021
+      name: potsdam
   callbacks:
     - class_path: TQDMProgressBar
     - class_path: LearningRateMonitor
@@ -23,13 +23,15 @@ trainer:
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: eosfm.datamodules.ETCI2021DataModule
+  class_path: eosfm.datamodules.Potsdam2DDataModule
   init_args:
-    batch_size: 512
-    num_workers: 4
+    batch_size: 16
+    tile_size: 512
+    num_workers: 8
+    val_split_pct: 0.5
+    bands: [3, 0, 1]
   dict_kwargs:
-    root: data/etci2021-clean
-    download: true
+    root: /share/projects/datasets/Potsdam
 
 model:
   class_path: terratorch.tasks.SemanticSegmentationTask
@@ -37,13 +39,12 @@ model:
     model_factory: EncoderDecoderFactory
     model_args:
       backbone: timm_convnextv2_atto
-      backbone_pretrained: true
-      backbone_in_chans: 3
+      backbone_pretrained: True
       decoder: UperNetDecoder
       decoder_channels: 128
       head_channel_list: [128]
       head_dropout: 0.1
-      num_classes: 2
+      num_classes: 6
     loss: dice
     ignore_index: -1
     freeze_backbone: false

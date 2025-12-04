@@ -5,50 +5,47 @@ trainer:
   strategy: auto
   devices: auto
   num_nodes: 1
-  precision: bf16-mixed
+  precision: bf16
   logger:
     class_path: TensorBoardLogger
     init_args:
-      save_dir: experiments
-      name: etci2021
+      save_dir: experiments/train
+      name: bigearthnet
   callbacks:
     - class_path: TQDMProgressBar
     - class_path: LearningRateMonitor
       init_args:
         logging_interval: epoch
 
-  max_epochs: 100
+  max_epochs: 10
   check_val_every_n_epoch: 1
   log_every_n_steps: 50
   enable_checkpointing: true
-  default_root_dir: experiments
+  default_root_dir: experiments/train
 data:
-  class_path: eosfm.datamodules.ETCI2021DataModule
+  class_path: eosfm.datamodules.BigEarthNetV2DataModule
   init_args:
     batch_size: 512
-    num_workers: 4
+    num_workers: 8
+    bands: 'rgb'
   dict_kwargs:
-    root: data/etci2021-clean
-    download: true
+    root: /share/projects/datasets/BigEarthNet/
+    # download: true
 
 model:
-  class_path: terratorch.tasks.SemanticSegmentationTask
+  class_path: terratorch.tasks.MultiLabelClassificationTask
   init_args:
     model_factory: EncoderDecoderFactory
     model_args:
       backbone: timm_convnextv2_atto
-      backbone_pretrained: true
-      backbone_in_chans: 3
-      decoder: UperNetDecoder
-      decoder_channels: 128
-      head_channel_list: [128]
-      head_dropout: 0.1
-      num_classes: 2
-    loss: dice
+      backbone_pretrained: True
+      # backbone_in_chans: 14
+      decoder: IdentityDecoder
+      num_classes: 19
+    loss: bce
     ignore_index: -1
     freeze_backbone: false
-    freeze_decoder: false
-    plot_on_val: false
+    freeze_decoder: false 
 
 optimizer:
   class_path: torch.optim.AdamW

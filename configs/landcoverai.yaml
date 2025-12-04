@@ -10,25 +10,25 @@ trainer:
     class_path: TensorBoardLogger
     init_args:
       save_dir: experiments
-      name: etci2021
+      name: landcoverai
   callbacks:
     - class_path: TQDMProgressBar
     - class_path: LearningRateMonitor
       init_args:
         logging_interval: epoch
 
-  max_epochs: 100
+  max_epochs: 100  # For testing only
   check_val_every_n_epoch: 1
-  log_every_n_steps: 50
+  log_every_n_steps: 10
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: eosfm.datamodules.ETCI2021DataModule
+  class_path: torchgeo.datamodules.LandCoverAIDataModule
   init_args:
-    batch_size: 512
-    num_workers: 4
+    batch_size: 64  # Small batch for testing
+    num_workers: 8
   dict_kwargs:
-    root: data/etci2021-clean
+    root: data
     download: true
 
 model:
@@ -37,25 +37,11 @@ model:
     model_factory: EncoderDecoderFactory
     model_args:
       backbone: timm_convnextv2_atto
-      backbone_pretrained: true
-      backbone_in_chans: 3
+      backbone_pretrained: True
       decoder: UperNetDecoder
       decoder_channels: 128
       head_channel_list: [128]
       head_dropout: 0.1
-      num_classes: 2
-    loss: dice
+      num_classes: 5  # Background + 4 classes (building, woodland, water, road)
+    loss: ce
     ignore_index: -1
-    freeze_backbone: false
-    freeze_decoder: false
-    plot_on_val: false
-
-optimizer:
-  class_path: torch.optim.AdamW
-  init_args:
-    lr: 1.e-4
-    weight_decay: 0.1
-# lr_scheduler:
-#   class_path: ReduceLROnPlateau
-#   init_args:
-#     monitor: val/loss

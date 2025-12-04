@@ -19,13 +19,14 @@ from .base import PinNonGeoDataModule
 from torchgeo.datasets import NonGeoDataset
 from torchgeo.datasets.utils import Path
 
+
 class MiniFrance(NonGeoDataset):
     """MiniFrance dataset."""
 
     def __init__(
         self,
-        root: Path = 'data',
-        split: str = 'train',
+        root: Path = "data",
+        split: str = "train",
         transforms: Optional[Callable[[Dict[str, Tensor]], Dict[str, Tensor]]] = None,
         tile_size: int = 512,
         stride: int = 256,
@@ -77,7 +78,9 @@ class MiniFrance(NonGeoDataset):
         images_clean = sorted([p for p in image_files if p not in images_removed])
         masks_clean = sorted([p for p in label_files if p not in masks_removed])
 
-        files = [{"image": img, "mask": lbl} for img, lbl in zip(images_clean, masks_clean)]
+        files = [
+            {"image": img, "mask": lbl} for img, lbl in zip(images_clean, masks_clean)
+        ]
         return files
 
     def _create_tiles(self) -> List[Dict[str, Any]]:
@@ -89,23 +92,19 @@ class MiniFrance(NonGeoDataset):
 
             for y in range(0, height - self.tile_size + 1, self.stride):
                 for x in range(0, width - self.tile_size + 1, self.stride):
-                    tiles.append({
-                        "file_index": i,
-                        "x": x,
-                        "y": y
-                    })
+                    tiles.append({"file_index": i, "x": x, "y": y})
         return tiles
 
     def __getitem__(self, index: int) -> Dict[str, Tensor]:
         """Return an index within the dataset."""
         tile_info = self.tiles[index]
         file_info = self.files[tile_info["file_index"]]
-        
+
         window = Window(tile_info["x"], tile_info["y"], self.tile_size, self.tile_size)
 
         with rasterio.open(file_info["image"]) as src:
             image = src.read(window=window)
-        
+
         with rasterio.open(file_info["mask"]) as src:
             mask = src.read(1, window=window)
 
@@ -139,7 +138,7 @@ class MiniFrance(NonGeoDataset):
         """
         image = sample["image"].numpy()
         mask = sample["mask"].numpy()
-        
+
         # Assuming image is CHW and we want to display RGB
         if image.shape[0] == 3:
             image = np.moveaxis(image, 0, -1)
@@ -187,6 +186,7 @@ class MiniFranceDataModule(PinNonGeoDataModule):
         if stage in ["fit", "validate"]:
             dataset = MiniFrance(split="train", **self.kwargs)
             train_size = int(0.8 * len(dataset))
+            print(f"Train size: {train_size}, Val size: {len(dataset) - train_size}")
             val_size = len(dataset) - train_size
             self.train_dataset, self.val_dataset = random_split(
                 dataset, [train_size, val_size]

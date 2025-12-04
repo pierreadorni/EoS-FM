@@ -10,26 +10,28 @@ trainer:
     class_path: TensorBoardLogger
     init_args:
       save_dir: experiments
-      name: etci2021
+      name: inria_aerial
   callbacks:
     - class_path: TQDMProgressBar
     - class_path: LearningRateMonitor
       init_args:
         logging_interval: epoch
 
-  max_epochs: 100
+  max_epochs: 20
   check_val_every_n_epoch: 1
-  log_every_n_steps: 50
+  log_every_n_steps: 10
   enable_checkpointing: true
   default_root_dir: experiments
 data:
-  class_path: eosfm.datamodules.ETCI2021DataModule
+  class_path: eosfm.datamodules.InriaAerialDataModule
   init_args:
-    batch_size: 512
-    num_workers: 4
+    batch_size: 16
+    tile_size: 512
+    stride: 512  # No overlap for validation
+    num_workers: 8
+    pin_memory: true
   dict_kwargs:
-    root: data/etci2021-clean
-    download: true
+    root: data
 
 model:
   class_path: terratorch.tasks.SemanticSegmentationTask
@@ -37,17 +39,14 @@ model:
     model_factory: EncoderDecoderFactory
     model_args:
       backbone: timm_convnextv2_atto
-      backbone_pretrained: true
-      backbone_in_chans: 3
+      backbone_pretrained: True
       decoder: UperNetDecoder
       decoder_channels: 128
       head_channel_list: [128]
       head_dropout: 0.1
-      num_classes: 2
-    loss: dice
+      num_classes: 2  # Binary: building or not
+    loss: ce
     ignore_index: -1
-    freeze_backbone: false
-    freeze_decoder: false
     plot_on_val: false
 
 optimizer:
@@ -55,7 +54,3 @@ optimizer:
   init_args:
     lr: 1.e-4
     weight_decay: 0.1
-# lr_scheduler:
-#   class_path: ReduceLROnPlateau
-#   init_args:
-#     monitor: val/loss

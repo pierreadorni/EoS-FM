@@ -7,3 +7,7 @@ from .caffe import *
 from .minifrance import *
 from .base import *
 from .sen12ms import *
+from .opencanopy import *
+from .potsdam import *
+from .cloud_cover import *
+from .inria_aerial import *

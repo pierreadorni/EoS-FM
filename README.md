@@ -1,7 +1,6 @@
-# EoS-FM: Ensemble of Specialists as a Foundation Model
+# EoS-FM: Can an Ensemble of Specialist Models Act as a Generalist Feature Extractor?
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa] [![arXiv](https://img.shields.io/badge/arXiv-2511.21523-b31b1b.svg)](https://arxiv.org/abs/2511.21523)
-**Can an Ensemble of Specialist Models Act as a Generalist Feature Extractor?**
 
 **Paper**: [arXiv:2511.21523v1](https://arxiv.org/abs/2511.21523)
 **License**: CC BY-NC-SA 4.0
@@ -60,8 +59,87 @@ model:
       backbone_in_chans: 3
       model_weights: path/to/eosfm_ensemble.pth
       freeze: true  # Freeze encoders during training (recommended)
+    
+      normalize_features: true  # Apply feature normalization before fusion
+      normalization_type: "batch"  # "batch" for BatchNorm2d, "layer" for LayerNorm
+      projection_layer: false  # Add Conv2d 1x1 + LeakyReLU after normalization
+      
+      feature_fusion: null  # Options: null, "conv1x1", "mlp", "addition", "multiplication"
+      fuse_to_mult: 1  # Multiplier for output channels (used with conv1x1/mlp)
+      
+      max_encoders: null  # Set to k to select only top-k encoders (e.g., 5)
+      encoder_selection_mode: "topk"  # "topk" for hard selection, "smooth" for soft weighting
+      scale_features: false  # Whether to scale features by selection weights
+      
+      ablate_encoders: []  # List of encoder indices to disable (e.g., [0, 3, 7])
+      
       decoder: UperNetDecoder
       num_classes: 6
+```
+
+#### Advanced Feature Fusion Examples
+
+**1. Basic Concatenation (Default)**
+```yaml
+model_args:
+  backbone: EosFM
+  feature_fusion: null  # Simply concatenates all encoder features
+  normalize_features: true  # Recommended for stable training
+```
+
+**2. Dimensionality Reduction with Conv1x1**
+```yaml
+model_args:
+  backbone: EosFM
+  feature_fusion: "conv1x1"  # Reduces concatenated features
+  fuse_to_mult: 2  # Output = 2 × single_encoder_channels
+  normalize_features: true
+```
+
+**3. Non-linear Fusion with MLP**
+```yaml
+model_args:
+  backbone: EosFM
+  feature_fusion: "mlp"  # Two-layer MLP with ReLU
+  fuse_to_mult: 1  # Match single encoder dimensions
+  normalize_features: true
+  projection_layer: true  # Additional learnable projection per encoder
+```
+
+**4. Addition/Multiplication Fusion** (requires all encoders to have same output dimensions)
+```yaml
+model_args:
+  backbone: EosFM
+  feature_fusion: "addition"  # or "multiplication"
+  normalize_features: true  # Critical for these modes
+```
+
+**5. Encoder Selection with Top-K**
+```yaml
+model_args:
+  backbone: EosFM
+  max_encoders: 5  # Select only 5 most relevant encoders
+  encoder_selection_mode: "topk"  # Hard selection
+  scale_features: false  # Binary mask (selected=1, others=0)
+  normalize_features: true
+```
+
+**6. Smooth Encoder Selection** (use with sparsity regularization)
+```yaml
+model_args:
+  backbone: EosFM
+  max_encoders: 5  # Target number of encoders
+  encoder_selection_mode: "smooth"  # Soft weighting with sigmoid
+  scale_features: true  # Weight features by learned importance
+  normalize_features: true
+```
+
+**7. Ablation Study Configuration**
+```yaml
+model_args:
+  backbone: EosFM
+  ablate_encoders: [0, 3, 7]  # Disable encoders 0, 3, and 7
+  # Useful for analyzing individual encoder contributions
 ```
 
 ### Creating Ensemble .pth Files

@@ -10,3 +10,4 @@ logs/*
 .github/*
 emissions.csv
 *.sbatch
+outputs

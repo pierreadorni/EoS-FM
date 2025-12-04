@@ -1,6 +1,9 @@
+<div align="center">
+
 # EoS-FM: Can an Ensemble of Specialist Models Act as a Generalist Feature Extractor?
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa] [![arXiv](https://img.shields.io/badge/arXiv-2511.21523-b31b1b.svg)](https://arxiv.org/abs/2511.21523)
+</div>
 
 **Paper**: [arXiv:2511.21523v1](https://arxiv.org/abs/2511.21523)
 **License**: CC BY-NC-SA 4.0

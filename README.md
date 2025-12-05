@@ -281,9 +281,11 @@ Contributions welcome! Please:
 
 ## Citing this work
 
+```
 @article{adorni2025eos,
   title={EoS-FM: Can an Ensemble of Specialist Models act as a Generalist Feature Extractor?},
   author={Adorni, Pierre and Pham, Minh-Tan and May, St{\'e}phane and Lef{\`e}vre, S{\'e}bastien},
   journal={arXiv preprint arXiv:2511.21523},
   year={2025}
 }
+```

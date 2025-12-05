@@ -273,10 +273,17 @@ This work is licensed under a
 [cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
 [cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
 
-
-
 ## Contributing
 
 Contributions welcome! Please:
 1. Follow the existing code structure
 3. Update configs and documentation
+
+## Citing this work
+
+@article{adorni2025eos,
+  title={EoS-FM: Can an Ensemble of Specialist Models act as a Generalist Feature Extractor?},
+  author={Adorni, Pierre and Pham, Minh-Tan and May, St{\'e}phane and Lef{\`e}vre, S{\'e}bastien},
+  journal={arXiv preprint arXiv:2511.21523},
+  year={2025}
+}

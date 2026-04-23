@@ -6,7 +6,7 @@
 </div>
 
 <p align='center'>
-  <img src="https://github.com/user-attachments/assets/8a4e9f7f-6fdf-42f3-a4b7-879343024962" width="80%"/>
+  <img src="https://github.com/user-attachments/assets/f62362c9-edd7-440c-b160-28c92d731ae8" width="80%"/>
 </p>
 
 An ensemble foundation model for Earth Observation that aggregates features from multiple specialist backbone encoders to achieve generalist capabilities across diverse remote sensing tasks.

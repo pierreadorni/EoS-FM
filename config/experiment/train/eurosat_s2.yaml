@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/eurosat-s2/version_3/checkpoints/epoch=9-step=2530.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: classification
 
@@ -8,6 +10,25 @@ data:
   num_workers: 4
   bands: ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11", "B12", "B8A"]
   root: data/eurosat
+
+normalization:
+  mean: [1354.3916529, 1118.20467932, 1042.86600048, 947.49144443, 1199.32147089, 1999.69984638, 2369.16155994, 2296.74731834, 732.00484619, 12.11235018, 1818.690146, 1118.67894214, 2594.06155436]
+  std: [245.72876755, 332.99637283, 395.07381548, 593.70918482, 566.40942581, 861.32636532, 1086.8325717, 1118.17502038, 404.96513745, 4.77638382, 1002.6234282, 761.30397652, 1231.81907474]
+
+bands:
+  - B1
+  - B2
+  - B3
+  - B4
+  - B5
+  - B6
+  - B7
+  - B8
+  - B9
+  - B10
+  - B11
+  - B12
+  - B8A
 
 trainer:
   max_epochs: 10
@@ -19,5 +40,7 @@ logger:
 
 model:
   model_args:
+    # Source version_3 records ImageNet initialization; differs from the older public specialist.
+    backbone_pretrained: True
     num_classes: 10
     backbone_in_chans: 13

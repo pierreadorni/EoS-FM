@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/cloud_cover/version_12/checkpoints/epoch=19-step=7340.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -6,10 +8,20 @@ data:
   _target_: eosfm.datamodules.CloudCoverDetectionDataModule
   batch_size: 32
   num_workers: 4
-  band_indices: [3, 2, 1]
+  # Dataset selection below already returns NIR, R, G in that order.
+  band_indices: [0, 1, 2]
   root: data/cloud_cover
   download: true
-  bands: ['B02', 'B03', 'B04', 'B08']
+  bands: ['B08', 'B04', 'B03']
+
+normalization:
+  mean: [3658.56637281, 2741.77336591, 2839.74661943]
+  std: [2424.53102223, 2790.67891124, 2899.97362746]
+
+bands:
+  - B08
+  - B04
+  - B03
 
 trainer:
   max_epochs: 20

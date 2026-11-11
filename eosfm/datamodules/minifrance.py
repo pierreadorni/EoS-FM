@@ -111,7 +111,11 @@ class MiniFrance(NonGeoDataset):
         image = torch.from_numpy(image).float()
         mask = torch.from_numpy(mask).long()
 
-        sample = {"image": image, "mask": mask}
+        sample = {
+            "image": image,
+            "mask": mask,
+            "filename": str(file_info["image"]),
+        }
 
         if self.transforms:
             sample = self.transforms(sample)

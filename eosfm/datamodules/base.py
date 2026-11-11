@@ -83,7 +83,7 @@ class PinNonGeoDataModule(BaseDataModule):
             persistent_workers=self.num_workers > 0,
             pin_memory=self.pin_memory,
             prefetch_factor=1 if self.num_workers > 0 else None,
-            timeout=30 if self.num_workers > 0 else 0,
+            timeout=300 if self.num_workers > 0 else 0,
         )
 
     def train_dataloader(self) -> DataLoader[dict[str, Tensor]]:

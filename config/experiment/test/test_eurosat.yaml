@@ -1,6 +1,11 @@
 # @package _global_
+# Frozen raw-feature classifier example.
 defaults:
-  - override /model: classification
+  - model: null
+
+seed: 625
+# Disable reduced-precision CUDA matmuls for this FP32 reference.
+float32_matmul_precision: highest
 
 data:
   _target_: torchgeo.datamodules.EuroSATDataModule
@@ -9,16 +14,47 @@ data:
   bands: ["B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09", "B10", "B11", "B12", "B8A"]
   root: data/eurosat
 
+# Fixed population moments fitted only on the 400 training images listed in
+# the original local sanity probe, in data.bands order. These intentionally
+# replace the DataModule's default statistics; no validation/test images were used.
+normalization:
+  mean: [1350.242919921875, 1109.90283203125, 1032.0528564453125, 925.6045532226562, 1188.3165283203125, 2038.048095703125, 2418.590087890625, 2350.122314453125, 769.4755249023438, 12.236328125, 1810.9124755859375, 1109.320068359375, 2646.86572265625]
+  std: [241.1416473388672, 323.93963623046875, 382.7080993652344, 569.2743530273438, 545.3477172851562, 874.705078125, 1108.97509765625, 1138.7030029296875, 414.4497375488281, 4.363458156585693, 966.8358154296875, 743.728759765625, 1247.238525390625]
+
 trainer:
+  # FP32 is the supported reference; specialist-training bf16 is a separate setting.
+  precision: 32-true
   max_epochs: 20
   check_val_every_n_epoch: 1
   log_every_n_steps: 50
 
 logger:
-  name: eurosat-test
+  name: eurosat-test-raw-fp32
   save_dir: experiments/test
 
 model:
+  _target_: terratorch.tasks.ClassificationTask
+  model_factory: EncoderDecoderFactory
   model_args:
+    backbone: EosFM
+    backbone_input_bands:
+      optical: ${data.bands}
+    backbone_input_size: 64
+    # Canonical weights_only-compatible 22-specialist checkpoint.
+    backbone_encoder_weights: release/eosfm.pth
+    backbone_finetune_encoders: false
+    backbone_feature_fusion: null
+    backbone_projection_layer: false
+    backbone_max_encoders: null
+    backbone_scale_features: false
+    # Raw baseline: no feature BN or running-stat updates. If enabling BN, fit
+    # statistics on training images only, then freeze them in eval mode for extraction.
+    backbone_normalize_features: false
+    backbone_torch_compile: false
+    decoder: IdentityDecoder
     num_classes: 10
-    backbone_in_chans: 13
+  loss: ce
+  freeze_backbone: true
+  freeze_decoder: false
+  optimizer: AdamW
+  lr: 1.e-4

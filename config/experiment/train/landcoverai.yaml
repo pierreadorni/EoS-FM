@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/landcoverai/version_5/checkpoints/epoch=99-step=11600.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -6,8 +8,17 @@ data:
   _target_: torchgeo.datamodules.LandCoverAIDataModule
   batch_size: 64
   num_workers: 8
-  root: data
+  root: data/landcover.ai
   download: true
+
+normalization:
+  mean: [94.23097194, 101.22639831, 87.5665202]
+  std: [41.91819584, 34.93242778, 28.70099405]
+
+bands:
+  - R
+  - G
+  - B
 
 trainer:
   max_epochs: 100

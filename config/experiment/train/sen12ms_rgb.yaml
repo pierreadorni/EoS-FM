@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/sen12ms-rgb/version_6/checkpoints/epoch=19-step=40760.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -9,6 +11,15 @@ data:
   band_set: rgb
   pin_memory: true
   root: data/sen12ms
+
+normalization:
+  mean: [1144.86107596, 1138.98422028, 1219.08066453]
+  std: [949.80079545, 710.99364792, 700.03174648]
+
+bands:
+  - B4
+  - B3
+  - B2
 
 trainer:
   max_epochs: 20

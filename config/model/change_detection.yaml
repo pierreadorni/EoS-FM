@@ -4,8 +4,9 @@ model_args:
   backbone: timm_convnextv2_atto
   backbone_pretrained: True
   decoder: UperNetDecoder
-  decoder_channels: 128
-  head_channel_list: [128]
+  # All dense specialists in the identified 22-entry source checkpoint use width 16.
+  decoder_channels: 16
+  head_channel_list: [16]
   head_dropout: 0.1
   num_classes: ???
 loss: ce

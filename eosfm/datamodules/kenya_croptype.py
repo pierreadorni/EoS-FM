@@ -1,12 +1,17 @@
 from torchgeo.datamodules import NonGeoDataModule
-from torchgeo.datasets import CV4AKenyaCropType
-from typing import Any
+from eosfm.datasets import CV4AKenyaCropType
+from typing import Any, Optional
 import torch
 from torch.utils.data import random_split
+from .base import PinNonGeoDataModule
 
 
-class CV4AKenyaCropTypeDataModule(NonGeoDataModule):
-    """LightningDataModule implementation for the CV4AKenyaCropType dataset."""
+class CV4AKenyaCropTypeDataModule(PinNonGeoDataModule):
+    """LightningDataModule implementation for the CV4AKenyaCropType dataset.
+
+    Keeps the native [B, T, C, H, W] shape expected by TemporalEncoderDecoderFactory.
+    Normalisation is applied per-band (13 values, broadcast over T and spatial dims).
+    """
 
     def __init__(
         self,
@@ -14,14 +19,54 @@ class CV4AKenyaCropTypeDataModule(NonGeoDataModule):
         num_workers: int = 0,
         **kwargs: Any,
     ) -> None:
-        """Initialize a new CV4AKenyaCropTypeDataModule instance.
-        Args:
-            batch_size: Size of each mini-batch.
-            num_workers: Number of workers for parallel data loading.
-            **kwargs: Additional keyword arguments passed to
-                :class:`~torchgeo.datasets.CV4AKenyaCropType`.
-        """
         super().__init__(CV4AKenyaCropType, batch_size, num_workers, **kwargs)
+
+    def on_after_batch_transfer(self, batch: Any, dataloader_idx: int) -> Any:
+        """Normalise [B, T, C, H, W] images without passing them through kornia.
+
+        Lightning calls transfer_batch_to_device before this hook, so the batch
+        is already on the correct device here. For 5-D temporal tensors we bypass
+        kornia entirely (it only accepts 2-D to 4-D inputs) and apply normalisation
+        manually using the mean/std stored in the augmentation pipeline.
+        For non-5-D tensors the default NonGeoDataModule behaviour is used.
+        """
+        image = batch.get("image")
+
+        if image is None or image.ndim != 5:
+            # Non-temporal batch — use the standard kornia pipeline
+            return super().on_after_batch_transfer(batch, dataloader_idx)
+
+        # 5-D temporal case: skip kornia, apply normalisation manually
+        mean, std = self._get_norm_params(image.device)
+        if mean is not None:
+            # mean/std: [C] -> [1, 1, C, 1, 1] to broadcast over [B, T, C, H, W]
+            mean = mean.view(1, 1, -1, 1, 1)
+            std = std.view(1, 1, -1, 1, 1)
+            batch["image"] = (image.float() - mean) / std
+        else:
+            batch["image"] = image.float()
+
+        return batch
+
+    def _get_norm_params(
+        self, device: torch.device
+    ) -> tuple[Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """Extract mean and std from the kornia augmentation pipeline."""
+        if not hasattr(self, "aug") or self.aug is None:
+            return None, None
+        try:
+            import kornia.augmentation as K
+
+            for transform in self.aug.children():
+                if isinstance(transform, K.Normalize):
+                    return transform.mean.to(device), transform.std.to(device)
+            # AugmentationSequential may nest them
+            for transform in self.aug.modules():
+                if isinstance(transform, K.Normalize):
+                    return transform.mean.to(device), transform.std.to(device)
+        except Exception:
+            pass
+        return None, None
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -35,8 +80,7 @@ class CV4AKenyaCropTypeDataModule(NonGeoDataModule):
 
         for i, (tile_index, y, x) in enumerate(dataset.chips_metadata):
             tile = dataset.tiles[tile_index]
-            labels, _ = dataset._load_label_tile(tile)
-            chip_labels = labels[y : y + dataset.chip_size, x : x + dataset.chip_size]
+            chip_labels, _ = dataset._load_label_chip(tile, y, x)
 
             if torch.any(chip_labels != 0):
                 train_indices.append(i)
@@ -53,4 +97,3 @@ class CV4AKenyaCropTypeDataModule(NonGeoDataModule):
 
         if stage in ["predict"]:
             self.predict_dataset = self.test_dataset
-

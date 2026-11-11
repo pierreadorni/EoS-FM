@@ -1,13 +1,24 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/deepglobe-lcc/version_13/checkpoints/epoch=99-step=6800.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
 data:
   _target_: torchgeo.datamodules.DeepGlobeLandCoverDataModule
-  batch_size: 32
+  batch_size: 8
   patch_size: 512
   num_workers: 8
   root: data/deepglobe2018-lcc
+
+normalization:
+  mean: [104.09648545, 96.59929007, 71.78738948]
+  std: [37.60033482, 29.36841253, 26.87765598]
+
+bands:
+  - R
+  - G
+  - B
 
 trainer:
   max_epochs: 100

@@ -1,17 +1,28 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/minifrance/version_15/checkpoints/epoch=9-step=73830.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
 data:
   _target_: eosfm.datamodules.MiniFranceDataModule
-  batch_size: 128
-  num_workers: 4
+  batch_size: 100
+  num_workers: 2
   pin_memory: true
-  root: /share/projects/datasets/MiniFrance
+  root: data/MiniFrance
+
+normalization:
+  mean: [109.63725024, 117.02769907, 95.30895658]
+  std: [59.27339112, 51.15302502, 51.04996351]
+
+bands:
+  - R
+  - G
+  - B
 
 trainer:
   max_epochs: 10
-  val_check_interval: 500
+  check_val_every_n_epoch: 0.5
   log_every_n_steps: 50
 
 logger:

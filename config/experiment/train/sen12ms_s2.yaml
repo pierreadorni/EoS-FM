@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/sen12ms-s2/version_7/checkpoints/epoch=9-step=40749.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -9,6 +11,25 @@ data:
   band_set: s2-all
   pin_memory: true
   root: data/sen12ms
+
+normalization:
+  mean: [1451.57301832, 1219.08066453, 1138.98422028, 1144.86107596, 1361.79451087, 1960.02265078, 2246.57242829, 2189.72469676, 2450.01890136, 795.46015108, 24.24750039, 2042.76190516, 1381.85752608]
+  std: [718.1504835, 700.03174648, 710.99364792, 949.80079545, 933.6632211, 969.40370739, 1074.40477889, 1050.17790421, 1130.55104665, 576.18583863, 35.76754008, 1151.86074445, 1013.38125742]
+
+bands:
+  - B1
+  - B2
+  - B3
+  - B4
+  - B5
+  - B6
+  - B7
+  - B8
+  - B8A
+  - B9
+  - B10
+  - B11
+  - B12
 
 trainer:
   max_epochs: 10

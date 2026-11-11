@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/levircdplus/version_15/checkpoints/epoch=99-step=3100.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: change_detection
 
@@ -10,6 +12,16 @@ data:
   num_workers: 8
   root: data/levircdplus
   download: true
+
+# RGB stats (both temporal images share the same sensor/bands)
+normalization:
+  mean: [100.48259079, 99.16850178, 84.59946858]
+  std: [49.57784498, 46.32688498, 42.78729068]
+
+bands:
+  - R
+  - G
+  - B
 
 trainer:
   max_epochs: 100

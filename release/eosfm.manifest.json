@@ -1,0 +1,1001 @@
+{
+  "format_version": 1,
+  "source": {
+    "path": "eosfm-norm-ratio.pth",
+    "sha256": "ee7b83fecc02092acf0c07fe7d27249fdab2f5dde8664a852d34a4441bbb39ae",
+    "size_bytes": 299353454,
+    "unchanged_after_export": true
+  },
+  "byte_identical_reference": null,
+  "artifact": {
+    "path": "release/eosfm.pth",
+    "sha256": "51d15c6ac0a39914780d78df3f9f953b4482f189c27c57398ae4cb75c0d850b0",
+    "size_bytes": 299234714
+  },
+  "conversion": {
+    "script": "scripts/export_compatible_checkpoint.py",
+    "script_sha256": "01a938473809b5ba61349763ad4453fbfc4b4c06816f0726eb1a5bd70508885e",
+    "torch_version": "2.6.0+cu124",
+    "omegaconf_version": "2.3.0",
+    "pickle_protocol": 2,
+    "omegaconf_resolve": false,
+    "changes": "OmegaConf metadata converted recursively to builtins; state_dict OrderedDict and its version metadata retained. Approved BigEarthNet corrections applied; see corrections.",
+    "reproducibility": "Stable ZIP root and source order; byte reproducibility checked separately with the recorded software versions. Different torch versions may produce different archive bytes."
+  },
+  "validation": {
+    "weights_only_load": true,
+    "metadata_plain_recursively": true,
+    "metadata_values_and_order_preserved": false,
+    "specialist_and_tensor_order_preserved": true,
+    "all_tensor_bytes_equal": false,
+    "state_dict_version_metadata_preserved": true,
+    "all_exported_tensor_bytes_equal_to_expected_sources": true,
+    "specialist_count": 22,
+    "includes_kenya_croptype": true,
+    "tensor_count": 2992,
+    "tensor_numel": 74534960,
+    "tensor_digest_format": "Per specialist: SHA256 of concatenated 8-byte big-endian header length, compact JSON [key,dtype,shape] UTF-8 header, and contiguous CPU tensor bytes, in state_dict order."
+  },
+  "corrections": {
+    "replacement_source": {
+      "path": "experiments/train/bigearthnet-S1/version_16/checkpoints/epoch=9-step=37170.ckpt",
+      "sha256": "ec79a0a37f18638b7cd1df064ae83712ce05fa25a3c18b91baa36c1ff31305e5",
+      "epoch": 9,
+      "global_step": 37170
+    },
+    "bigearthnet-S1": "Replaced version 17 with version 16; bands VH,VV,VH-VV; version-16 normalization.",
+    "bigearthnet": "Relabeled first two bands VH,VV; weights and positional normalization unchanged.",
+    "confirmation": "Pierre confirmed version 16 trained on VH,VV,VH-VV on 2026-11-11."
+  },
+  "evidence": [
+    {
+      "path": "analysis/pr625/checkpoint_manifest.json",
+      "sha256": "7c4b87bdd6a041eb861dd974143cfdbc28ab4df2750fe4569f143a921cc07662"
+    },
+    {
+      "path": "analysis/pr625/source_provenance.json",
+      "sha256": "c01d85829b95e9c0777ad9c7d1aa38b755958bfa49f095b4f2a7746cad10ac46"
+    },
+    {
+      "path": "analysis/pr625/FINDINGS.md",
+      "sha256": "34a026de07c4a971f96f5a521a03735dcab818373d651dd395f51ec171bc009f"
+    }
+  ],
+  "unresolved_metadata_caveats": [
+    "Metadata is preserved, not independently certified as the historical training protocol.",
+    "Kenya includes CLD, a cloud-probability band, rather than a thirteenth S2 spectral band. Historical normalization remains unproven.",
+    "No retraining, feature calibration, or new downstream accuracy qualification was performed."
+  ],
+  "specialists": [
+    {
+      "name": "eurosat-s2",
+      "in_chans": 13,
+      "tensor_count": 136,
+      "tensor_numel": 3393160,
+      "tensor_content_sha256": "0e88f9dd31e1eb125fdbea493934cfd7174716af4ad858441a6179d20222cbfa",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "IdentityDecoder",
+        "num_classes": 10,
+        "backbone_in_chans": 13,
+        "encoder_name": "eurosat-s2",
+        "encoder_version": "version_3",
+        "encoder_checkpoint": "epoch=9-step=2530.ckpt",
+        "bands": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B9",
+          "B10",
+          "B11",
+          "B12",
+          "B8A"
+        ],
+        "normalization": {
+          "mean": [
+            1354.3916529,
+            1118.20467932,
+            1042.86600048,
+            947.49144443,
+            1199.32147089,
+            1999.69984638,
+            2369.16155994,
+            2296.74731834,
+            732.00484619,
+            12.11235018,
+            1818.690146,
+            1118.67894214,
+            2594.06155436
+          ],
+          "std": [
+            245.72876755,
+            332.99637283,
+            395.07381548,
+            593.70918482,
+            566.40942581,
+            861.32636532,
+            1086.8325717,
+            1118.17502038,
+            404.96513745,
+            4.77638382,
+            1002.6234282,
+            761.30397652,
+            1231.81907474
+          ]
+        }
+      }
+    },
+    {
+      "name": "cloud_cover",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "960f6e2998d5468976351bd50736ba22c1cb10079addf0b6c4de7e2af805812a",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 2,
+        "encoder_name": "cloud_cover",
+        "encoder_version": "version_12",
+        "encoder_checkpoint": "epoch=19-step=7340.ckpt",
+        "bands": [
+          "B08",
+          "B04",
+          "B03"
+        ],
+        "normalization": {
+          "mean": [
+            3658.56637281,
+            2741.77336591,
+            2839.74661943
+          ],
+          "std": [
+            2424.53102223,
+            2790.67891124,
+            2899.97362746
+          ]
+        }
+      }
+    },
+    {
+      "name": "caffe",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "07857184cff45d8bf31c86e07c3d0d833f01cde98ee8181ba72636492e55fe7d",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 7,
+        "encoder_name": "caffe",
+        "encoder_version": "version_14",
+        "encoder_checkpoint": "epoch=99-step=40900.ckpt",
+        "bands": [
+          "VV",
+          "VV",
+          "VV"
+        ],
+        "normalization": {
+          "mean": [
+            62.03758643,
+            62.03758643,
+            62.03758643
+          ],
+          "std": [
+            79.77651954,
+            79.77651954,
+            79.77651954
+          ]
+        }
+      }
+    },
+    {
+      "name": "kenya-croptype",
+      "in_chans": 13,
+      "tensor_count": 136,
+      "tensor_numel": 3393160,
+      "tensor_content_sha256": "12949978df32c61e2662202d094c2b619ac6c8b6b3f3bb38fc3e20eac0a67452",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 8,
+        "ltae_n_head": 4,
+        "ltae_d_k": 8,
+        "ltae_dropout": 0.1,
+        "ltae_T": 1000,
+        "backbone_in_chans": 13,
+        "encoder_name": "kenya-croptype",
+        "encoder_version": "version_31",
+        "encoder_checkpoint": "epoch=199-step=1001.ckpt",
+        "bands": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B8A",
+          "B9",
+          "B11",
+          "B12",
+          "CLD"
+        ],
+        "normalization": {
+          "mean": [
+            0.06598704,
+            0.07360381,
+            0.10059358,
+            0.09254979,
+            0.14706411,
+            0.27304998,
+            0.31328234,
+            0.31256072,
+            0.33630628,
+            0.34900353,
+            0.25621468,
+            0.16756303,
+            3.4733504
+          ],
+          "std": [
+            0.11055796,
+            0.10908846,
+            0.10097974,
+            0.09989752,
+            0.09890717,
+            0.08709492,
+            0.0870306,
+            0.08877592,
+            0.08602162,
+            0.14418258,
+            0.07731038,
+            0.07609952,
+            16.72267723
+          ]
+        }
+      }
+    },
+    {
+      "name": "sen12ms-s1",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "910b19be17ce3a86e29d95e0b4208ecfc00d886756fbdaa530b4eedd3a6d4139",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 11,
+        "encoder_name": "sen12ms-s1",
+        "encoder_version": "version_32",
+        "encoder_checkpoint": "epoch=9-step=20342.ckpt",
+        "bands": [
+          "VV",
+          "VH",
+          "VV-VH"
+        ],
+        "normalization": {
+          "mean": [
+            -11.86433641,
+            -18.7668058,
+            6.902469388728191
+          ],
+          "std": [
+            4.66003464,
+            5.15882863,
+            3.1721220079700716
+          ]
+        }
+      }
+    },
+    {
+      "name": "sen12ms-s2",
+      "in_chans": 13,
+      "tensor_count": 136,
+      "tensor_numel": 3393160,
+      "tensor_content_sha256": "581d6bc6725de1b5bc6df1d71ddf9889677171ad3f7183120c6559b3b40f3675",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": false,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 11,
+        "backbone_in_chans": 13,
+        "encoder_name": "sen12ms-s2",
+        "encoder_version": "version_7",
+        "encoder_checkpoint": "epoch=9-step=40749.ckpt",
+        "bands": [
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B8A",
+          "B9",
+          "B10",
+          "B11",
+          "B12"
+        ],
+        "normalization": {
+          "mean": [
+            1451.57301832,
+            1219.08066453,
+            1138.98422028,
+            1144.86107596,
+            1361.79451087,
+            1960.02265078,
+            2246.57242829,
+            2189.72469676,
+            2450.01890136,
+            795.46015108,
+            24.24750039,
+            2042.76190516,
+            1381.85752608
+          ],
+          "std": [
+            718.1504835,
+            700.03174648,
+            710.99364792,
+            949.80079545,
+            933.6632211,
+            969.40370739,
+            1074.40477889,
+            1050.17790421,
+            1130.55104665,
+            576.18583863,
+            35.76754008,
+            1151.86074445,
+            1013.38125742
+          ]
+        }
+      }
+    },
+    {
+      "name": "inria_aerial",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "44e8318fb1fe05847b132770cad6c7a53f53125b0f51df022b02f285739010ba",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 2,
+        "encoder_name": "inria_aerial",
+        "encoder_version": "version_21",
+        "encoder_checkpoint": "epoch=19-step=19380.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            103.66568898,
+            109.08492642,
+            100.43484282
+          ],
+          "std": [
+            51.23012484,
+            46.62307735,
+            44.84063043
+          ]
+        }
+      }
+    },
+    {
+      "name": "levircdplus",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "6fe223d0a0d459a087b0cdbcdf70d6bc200459163606ff42ab3b4c33a5927745",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 2,
+        "encoder_name": "levircdplus",
+        "encoder_version": "version_15",
+        "encoder_checkpoint": "epoch=99-step=3100.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            100.48259079,
+            99.16850178,
+            84.59946858
+          ],
+          "std": [
+            49.57784498,
+            46.32688498,
+            42.78729068
+          ]
+        }
+      }
+    },
+    {
+      "name": "loveda",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "4a4cc8bb503f92ffeae962aed0017b82f75108aad7f5319ee3c341f8495d0169",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 8,
+        "encoder_name": "loveda",
+        "encoder_version": "version_6",
+        "encoder_checkpoint": "epoch=99-step=15700.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            74.04743641,
+            79.63683167,
+            76.02396539
+          ],
+          "std": [
+            41.35765102,
+            36.77994722,
+            35.30092324
+          ]
+        }
+      }
+    },
+    {
+      "name": "deepglobe-lcc",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "cc39074514eb709a6543f189fc309d1c2b81736567513adfe930f777fa3aeef9",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 7,
+        "encoder_name": "deepglobe-lcc",
+        "encoder_version": "version_13",
+        "encoder_checkpoint": "epoch=99-step=6800.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            104.09648545,
+            96.59929007,
+            71.78738948
+          ],
+          "std": [
+            37.60033482,
+            29.36841253,
+            26.87765598
+          ]
+        }
+      }
+    },
+    {
+      "name": "bigearthnet-S1",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "f9689ff15a03ea310bbf4a7a1f2d0cecd19334087ee742b4f3f91a26c4c8caf8",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "backbone_in_chans": 3,
+        "decoder": "IdentityDecoder",
+        "num_classes": 19,
+        "encoder_name": "bigearthnet-S1",
+        "encoder_version": "version_16",
+        "encoder_checkpoint": "epoch=9-step=37170.ckpt",
+        "bands": [
+          "VH",
+          "VV",
+          "VH-VV"
+        ],
+        "normalization": {
+          "mean": [
+            -19.352570009935356,
+            -12.643863201237926,
+            -6.708706808697431
+          ],
+          "std": [
+            5.597965149305456,
+            5.141607088788221,
+            3.80422570350782
+          ]
+        }
+      }
+    },
+    {
+      "name": "potsdam",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "0a495f04a6bfd7038e1fa12f0595fd6daaa554d6abc75fd25b8fe312cfc4b226",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 6,
+        "encoder_name": "potsdam",
+        "encoder_version": "version_2",
+        "encoder_checkpoint": "epoch=99-step=7500.ckpt",
+        "bands": [
+          "IR",
+          "R",
+          "G"
+        ],
+        "normalization": {
+          "mean": [
+            99.7261301,
+            87.00314226,
+            92.49686609
+          ],
+          "std": [
+            37.03224587,
+            35.93922634,
+            35.2668439
+          ]
+        }
+      }
+    },
+    {
+      "name": "eurosat",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "b7318b8d7eed59e51a6db3c0bf029e8a19c3b9d6cb89c45d43813782d7d1a380",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "IdentityDecoder",
+        "num_classes": 10,
+        "encoder_name": "eurosat",
+        "encoder_version": "version_4",
+        "encoder_checkpoint": "epoch=9-step=2530.ckpt",
+        "bands": [
+          "B04",
+          "B03",
+          "B02"
+        ],
+        "normalization": {
+          "mean": [
+            947.49144443,
+            1042.86600048,
+            1118.20467932
+          ],
+          "std": [
+            593.70918482,
+            395.07381548,
+            332.99637283
+          ]
+        }
+      }
+    },
+    {
+      "name": "opencanopy",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "507f9a2d2f18dc82e0fd143f3011d8a529beb916ca26983f40f638791774d7d1",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "encoder_name": "opencanopy",
+        "encoder_version": "version_13",
+        "encoder_checkpoint": "epoch=19-step=41480.ckpt",
+        "bands": [
+          "IR",
+          "R",
+          "G"
+        ],
+        "normalization": {
+          "mean": [
+            107.81521068,
+            33.88587511,
+            40.71030802
+          ],
+          "std": [
+            32.22845159,
+            26.66031499,
+            23.35656433
+          ]
+        }
+      }
+    },
+    {
+      "name": "bigearthnet",
+      "in_chans": 14,
+      "tensor_count": 136,
+      "tensor_numel": 3393800,
+      "tensor_content_sha256": "f67deee0f0454b81ff98bb455947161546e08e4be728267363a145885f60463a",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": false,
+        "backbone_in_chans": 14,
+        "decoder": "IdentityDecoder",
+        "num_classes": 19,
+        "encoder_name": "bigearthnet",
+        "encoder_version": "version_37",
+        "encoder_checkpoint": "epoch=8-step=19512.ckpt",
+        "bands": [
+          "VH",
+          "VV",
+          "B1",
+          "B2",
+          "B3",
+          "B4",
+          "B5",
+          "B6",
+          "B7",
+          "B8",
+          "B8A",
+          "B9",
+          "B11",
+          "B12"
+        ],
+        "normalization": {
+          "mean": [
+            -19.45644177,
+            -12.62333913,
+            387.86806157,
+            434.72201112,
+            623.53623869,
+            617.01535482,
+            968.34037724,
+            1787.03396744,
+            2070.15071651,
+            2205.42702747,
+            2267.15040726,
+            2269.70631688,
+            1647.05136016,
+            1052.35169
+          ],
+          "std": [
+            5.53632115,
+            4.94408425,
+            510.06762292,
+            542.71037077,
+            550.28511787,
+            661.46601364,
+            701.40835217,
+            1056.91827174,
+            1241.05763622,
+            1343.85138435,
+            1330.62329574,
+            1282.42146789,
+            1138.24323768,
+            866.80994253
+          ]
+        }
+      }
+    },
+    {
+      "name": "firerisk",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "a3f926e96005459fc2dae70bcf64be5c25859b8bc5fda730de249b052dcc2d3a",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "IdentityDecoder",
+        "num_classes": 10,
+        "encoder_name": "firerisk",
+        "encoder_version": "version_5",
+        "encoder_checkpoint": "epoch=49-step=54900.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            84.62519754,
+            107.69800658,
+            102.59053248
+          ],
+          "std": [
+            31.16378485,
+            35.74003352,
+            44.20090736
+          ]
+        }
+      }
+    },
+    {
+      "name": "bigearthnet-rgb",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "77c68302706c3afd08e8e6c329ec18d9e147abfdb62b422ec4a403ecbe93bb89",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "backbone_in_chans": 3,
+        "decoder": "IdentityDecoder",
+        "num_classes": 19,
+        "encoder_name": "bigearthnet-rgb",
+        "encoder_version": "version_23",
+        "encoder_checkpoint": "epoch=9-step=2710.ckpt",
+        "bands": [
+          "B4",
+          "B3",
+          "B2"
+        ],
+        "normalization": {
+          "mean": [
+            617.01535482,
+            623.53623869,
+            434.72201112
+          ],
+          "std": [
+            661.46601364,
+            550.28511787,
+            542.71037077
+          ]
+        }
+      }
+    },
+    {
+      "name": "landcoverai",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "d086beeba926077e47aed3d18fd3dea7d8546b3f23d6ea7f4083dc04b76c085b",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 5,
+        "encoder_name": "landcoverai",
+        "encoder_version": "version_5",
+        "encoder_checkpoint": "epoch=99-step=11600.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            94.23097194,
+            101.22639831,
+            87.5665202
+          ],
+          "std": [
+            41.91819584,
+            34.93242778,
+            28.70099405
+          ]
+        }
+      }
+    },
+    {
+      "name": "sen12ms-rgb",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "3a83526633c8b3056306036c6937c2a36a123abe7fe271f6161166a1c8e4b125",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 11,
+        "encoder_name": "sen12ms-rgb",
+        "encoder_version": "version_6",
+        "encoder_checkpoint": "epoch=19-step=40760.ckpt",
+        "bands": [
+          "B4",
+          "B3",
+          "B2"
+        ],
+        "normalization": {
+          "mean": [
+            1144.86107596,
+            1138.98422028,
+            1219.08066453
+          ],
+          "std": [
+            949.80079545,
+            710.99364792,
+            700.03174648
+          ]
+        }
+      }
+    },
+    {
+      "name": "imagenet",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "85a160e01685063fb0c780023a501d08fbdf364b393301340ff126088a8b5540",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "encoder_name": "imagenet",
+        "encoder_version": "version_1",
+        "encoder_checkpoint": "convnextv2_atto.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            0.485,
+            0.456,
+            0.406
+          ],
+          "std": [
+            0.229,
+            0.224,
+            0.225
+          ]
+        }
+      }
+    },
+    {
+      "name": "minifrance",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "b1eb60daf6be6b70633b7376d49fe0f42254bf1c429edb1f340beb5e6cd6644f",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 16,
+        "encoder_name": "minifrance",
+        "encoder_version": "version_15",
+        "encoder_checkpoint": "epoch=9-step=73830.ckpt",
+        "bands": [
+          "R",
+          "G",
+          "B"
+        ],
+        "normalization": {
+          "mean": [
+            109.63725024,
+            117.02769907,
+            95.30895658
+          ],
+          "std": [
+            59.27339112,
+            51.15302502,
+            51.04996351
+          ]
+        }
+      }
+    },
+    {
+      "name": "etci2021",
+      "in_chans": 3,
+      "tensor_count": 136,
+      "tensor_numel": 3386760,
+      "tensor_content_sha256": "f5fc481e4992c529fab21dde45d9afde7218d588320a495779c2ed920ba5cfeb",
+      "config": {
+        "backbone": "timm_convnextv2_atto",
+        "backbone_pretrained": true,
+        "decoder": "UperNetDecoder",
+        "decoder_channels": 16,
+        "head_channel_list": [
+          16
+        ],
+        "head_dropout": 0.1,
+        "num_classes": 2,
+        "encoder_name": "etci2021",
+        "encoder_version": "version_23",
+        "encoder_checkpoint": "epoch=99-step=32600.ckpt",
+        "bands": [
+          "VV",
+          "VH",
+          "VV-VH"
+        ],
+        "normalization": {
+          "mean": [
+            135.52413688,
+            177.07260985,
+            -41.551697394599216
+          ],
+          "std": [
+            34.93545881,
+            47.07644573,
+            24.2095173157172
+          ]
+        }
+      }
+    }
+  ]
+}

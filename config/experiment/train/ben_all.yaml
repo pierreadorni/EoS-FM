@@ -1,12 +1,36 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/bigearthnet/version_37/checkpoints/epoch=8-step=19512.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: multilabel_classification
 
 data:
   _target_: eosfm.datamodules.BigEarthNetV2DataModule
-  batch_size: 4
-  num_workers: 12
-  root: /share/projects/datasets/BigEarthNet/
+  batch_size: 64
+  num_workers: 16
+  root: data/bigearthnet
+  download: True
+
+# The loader sorts SAR as VH,VV; statistics remain in their original channel positions.
+normalization:
+  mean: [-19.45644177, -12.62333913, 387.86806157, 434.72201112, 623.53623869, 617.01535482, 968.34037724, 1787.03396744, 2070.15071651, 2205.42702747, 2267.15040726, 2269.70631688, 1647.05136016, 1052.35169]
+  std: [5.53632115, 4.94408425, 510.06762292, 542.71037077, 550.28511787, 661.46601364, 701.40835217, 1056.91827174, 1241.05763622, 1343.85138435, 1330.62329574, 1282.42146789, 1138.24323768, 866.80994253]
+
+bands:
+  - VH
+  - VV
+  - B1
+  - B2
+  - B3
+  - B4
+  - B5
+  - B6
+  - B7
+  - B8
+  - B8A
+  - B9
+  - B11
+  - B12
 
 trainer:
   max_epochs: 10
@@ -17,6 +41,8 @@ logger:
   name: bigearthnet
 
 model:
+  # Source version_37 records 1e-4; other multilabel recipes use 1e-3.
+  lr: 1.e-4
   model_args:
     backbone_pretrained: False
     backbone_in_chans: 14

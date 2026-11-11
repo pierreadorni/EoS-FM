@@ -1,4 +1,6 @@
 # @package _global_
+# Release specialist: experiments/train/bigearthnet-S1/version_16/checkpoints/epoch=9-step=37170.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: multilabel_classification
 
@@ -7,7 +9,17 @@ data:
   batch_size: 64
   num_workers: 12
   bands: 's1'
-  root: /share/projects/datasets/BigEarthNet/
+  root: data/bigearthnet
+
+# Version 16 used VH,VV,VH-VV (training representation confirmed by Pierre).
+normalization:
+  mean: [-19.352570009935356,-12.643863201237926, -6.708706808697431]  # VH, VV, VH-VV
+  std: [5.597965149305456, 5.141607088788221, 3.80422570350782]  # VH, VV, VH-VV
+
+bands:
+  - VH
+  - VV
+  - VH-VV
 
 trainer:
   max_epochs: 10

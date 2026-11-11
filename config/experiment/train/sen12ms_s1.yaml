@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/sen12ms-s1/version_32/checkpoints/epoch=9-step=20342.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -9,6 +11,15 @@ data:
   band_set: s1
   pin_memory: true
   root: data/sen12ms
+
+normalization:
+  mean: [-11.86433641, -18.7668058, 6.902469388728191]
+  std: [4.66003464, 5.15882863, 3.1721220079700716]
+
+bands:
+  - VV
+  - VH
+  - VV-VH
 
 trainer:
   max_epochs: 10

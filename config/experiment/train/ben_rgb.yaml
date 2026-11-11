@@ -1,13 +1,24 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/bigearthnet-rgb/version_23/checkpoints/epoch=9-step=2710.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: multilabel_classification
 
 data:
   _target_: eosfm.datamodules.BigEarthNetV2DataModule
   batch_size: 512
-  num_workers: 8
+  num_workers: 16
   bands: 'rgb'
-  root: /share/projects/datasets/BigEarthNet/
+  root: data/bigearthnet
+
+normalization:
+  mean: [617.01535482, 623.53623869, 434.72201112]
+  std: [661.46601364, 550.28511787, 542.71037077]
+
+bands:
+  - B4
+  - B3
+  - B2
 
 trainer:
   max_epochs: 10
@@ -15,7 +26,7 @@ trainer:
   log_every_n_steps: 50
 
 logger:
-  name: bigearthnet
+  name: bigearthnet-rgb
 
 model:
   model_args:

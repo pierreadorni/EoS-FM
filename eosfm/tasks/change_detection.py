@@ -338,6 +338,31 @@ class ChangeDetectionTask(TerraTorchTask):
     def squeeze_ground_truth(self, x):
         return torch.squeeze(x, 1)
 
+    @staticmethod
+    def _extract_images(batch: dict) -> tuple[Tensor, Tensor]:
+        """Extract image1 and image2 from a change detection batch.
+
+        Supports both torchgeo formats:
+          - v0.8+: batch["image"] with shape (B, T=2, C, H, W)
+          - legacy: batch["image1"] and batch["image2"] with shape (B, C, H, W)
+        """
+        if "image1" in batch and "image2" in batch:
+            return batch["image1"], batch["image2"]
+        elif "image" in batch:
+            image = batch["image"]
+            if image.dim() == 5 and image.shape[1] == 2:
+                # (B, T=2, C, H, W) -> split along T
+                return image[:, 0], image[:, 1]
+            else:
+                raise ValueError(
+                    f"Expected 5D image tensor with T=2, got shape {image.shape}"
+                )
+        else:
+            raise KeyError(
+                f"Batch must contain 'image' (5D) or 'image1'+'image2' keys. "
+                f"Got keys: {list(batch.keys())}"
+            )
+
     def forward_change_detection(
         self, image1: Tensor, image2: Tensor, **kwargs
     ) -> ModelOutput:
@@ -513,8 +538,7 @@ class ChangeDetectionTask(TerraTorchTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        image1 = batch["image1"]
-        image2 = batch["image2"]
+        image1, image2 = self._extract_images(batch)
         y = self.squeeze_ground_truth(batch["mask"])
 
         # Forward pass with both images
@@ -544,8 +568,7 @@ class ChangeDetectionTask(TerraTorchTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        image1 = batch["image1"]
-        image2 = batch["image2"]
+        image1, image2 = self._extract_images(batch)
         y = self.squeeze_ground_truth(batch["mask"])
 
         # Forward pass with both images
@@ -565,10 +588,10 @@ class ChangeDetectionTask(TerraTorchTask):
         if self._do_plot_samples(batch_idx):
             try:
                 datamodule = self.trainer.datamodule
-                batch["prediction"] = y_hat_hard
+                batch["prediction"] = y_hat_hard.unsqueeze(1)
 
-                # Use image2 for visualization (or could concatenate both)
-                batch["image"] = image2
+                # Reconstruct the stacked (T=2, C, H, W) image expected by torchgeo's plot()
+                batch["image"] = torch.stack([image1, image2], dim=1)
 
                 for key in ["image", "mask", "prediction"]:
                     if key in batch:
@@ -601,8 +624,7 @@ class ChangeDetectionTask(TerraTorchTask):
             batch_idx: Integer displaying index of this batch.
             dataloader_idx: Index of the current dataloader.
         """
-        image1 = batch["image1"]
-        image2 = batch["image2"]
+        image1, image2 = self._extract_images(batch)
         y = self.squeeze_ground_truth(batch["mask"])
 
         # Forward pass with both images
@@ -641,8 +663,7 @@ class ChangeDetectionTask(TerraTorchTask):
         Returns:
             Output predicted probabilities.
         """
-        image1 = batch["image1"]
-        image2 = batch["image2"]
+        image1, image2 = self._extract_images(batch)
         file_names = batch["filename"] if "filename" in batch else None
 
         # Forward pass with both images

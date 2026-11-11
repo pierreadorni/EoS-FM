@@ -1,13 +1,24 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/etci2021/version_23/checkpoints/epoch=99-step=32600.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
 data:
   _target_: eosfm.datamodules.ETCI2021DataModule
-  batch_size: 512
+  batch_size: 64
   num_workers: 4
   root: data/etci2021-clean
   download: true
+
+normalization:
+  mean: [135.52413688, 177.07260985, -41.551697394599216]  # VV, VH, VV-VH ratio
+  std: [34.93545881, 47.07644573, 24.2095173157172]  # VV, VH, VV-VH ratio
+
+bands:
+  - VV
+  - VH
+  - VV-VH
 
 trainer:
   max_epochs: 100

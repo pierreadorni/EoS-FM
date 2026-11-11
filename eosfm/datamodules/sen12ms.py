@@ -77,107 +77,107 @@ class SEN12MS(NonGeoDataset):
     """
 
     BAND_SETS: ClassVar[dict[str, tuple[str, ...]]] = {
-        'all': (
-            'VV',
-            'VH',
-            'B01',
-            'B02',
-            'B03',
-            'B04',
-            'B05',
-            'B06',
-            'B07',
-            'B08',
-            'B8A',
-            'B09',
-            'B10',
-            'B11',
-            'B12',
+        "all": (
+            "VV",
+            "VH",
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B10",
+            "B11",
+            "B12",
         ),
-        's1': ('VV', 'VH'),
-        's2-all': (
-            'B01',
-            'B02',
-            'B03',
-            'B04',
-            'B05',
-            'B06',
-            'B07',
-            'B08',
-            'B8A',
-            'B09',
-            'B10',
-            'B11',
-            'B12',
+        "s1": ("VV", "VH"),
+        "s2-all": (
+            "B01",
+            "B02",
+            "B03",
+            "B04",
+            "B05",
+            "B06",
+            "B07",
+            "B08",
+            "B8A",
+            "B09",
+            "B10",
+            "B11",
+            "B12",
         ),
-        's2-reduced': ('B02', 'B03', 'B04', 'B08', 'B10', 'B11'),
-        'rgb': ('B04', 'B03', 'B02'),
+        "s2-reduced": ("B02", "B03", "B04", "B08", "B10", "B11"),
+        "rgb": ("B04", "B03", "B02"),
     }
 
     band_names = (
-        'VV',
-        'VH',
-        'B01',
-        'B02',
-        'B03',
-        'B04',
-        'B05',
-        'B06',
-        'B07',
-        'B08',
-        'B8A',
-        'B09',
-        'B10',
-        'B11',
-        'B12',
+        "VV",
+        "VH",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08",
+        "B8A",
+        "B09",
+        "B10",
+        "B11",
+        "B12",
     )
 
     filenames = (
-        'ROIs1158_spring_lc.tar.gz',
-        'ROIs1158_spring_s1.tar.gz',
-        'ROIs1158_spring_s2.tar.gz',
-        'ROIs1868_summer_lc.tar.gz',
-        'ROIs1868_summer_s1.tar.gz',
-        'ROIs1868_summer_s2.tar.gz',
-        'ROIs1970_fall_lc.tar.gz',
-        'ROIs1970_fall_s1.tar.gz',
-        'ROIs1970_fall_s2.tar.gz',
-        'ROIs2017_winter_lc.tar.gz',
-        'ROIs2017_winter_s1.tar.gz',
-        'ROIs2017_winter_s2.tar.gz',
-        'train_list.txt',
-        'test_list.txt',
+        "ROIs1158_spring_lc.tar.gz",
+        "ROIs1158_spring_s1.tar.gz",
+        "ROIs1158_spring_s2.tar.gz",
+        "ROIs1868_summer_lc.tar.gz",
+        "ROIs1868_summer_s1.tar.gz",
+        "ROIs1868_summer_s2.tar.gz",
+        "ROIs1970_fall_lc.tar.gz",
+        "ROIs1970_fall_s1.tar.gz",
+        "ROIs1970_fall_s2.tar.gz",
+        "ROIs2017_winter_lc.tar.gz",
+        "ROIs2017_winter_s1.tar.gz",
+        "ROIs2017_winter_s2.tar.gz",
+        "train_list.txt",
+        "test_list.txt",
     )
     light_filenames = (
-        'ROIs1158_spring',
-        'ROIs1868_summer',
-        'ROIs1970_fall',
-        'ROIs2017_winter',
-        'train_list.txt',
-        'test_list.txt',
+        "ROIs1158_spring",
+        "ROIs1868_summer",
+        "ROIs1970_fall",
+        "ROIs2017_winter",
+        "train_list.txt",
+        "test_list.txt",
     )
     md5s = (
-        '6e2e8fa8b8cba77ddab49fd20ff5c37b',
-        'fba019bb27a08c1db96b31f718c34d79',
-        'd58af2c15a16f376eb3308dc9b685af2',
-        '2c5bd80244440b6f9d54957c6b1f23d4',
-        '01044b7f58d33570c6b57fec28a3d449',
-        '4dbaf72ecb704a4794036fe691427ff3',
-        '9b126a68b0e3af260071b3139cb57cee',
-        '19132e0aab9d4d6862fd42e8e6760847',
-        'b8f117818878da86b5f5e06400eb1866',
-        '0fa0420ef7bcfe4387c7e6fe226dc728',
-        'bb8cbfc16b95a4f054a3d5380e0130ed',
-        '3807545661288dcca312c9c538537b63',
-        '0a68d4e1eb24f128fccdb930000b2546',
-        'c7faad064001e646445c4c634169484d',
+        "6e2e8fa8b8cba77ddab49fd20ff5c37b",
+        "fba019bb27a08c1db96b31f718c34d79",
+        "d58af2c15a16f376eb3308dc9b685af2",
+        "2c5bd80244440b6f9d54957c6b1f23d4",
+        "01044b7f58d33570c6b57fec28a3d449",
+        "4dbaf72ecb704a4794036fe691427ff3",
+        "9b126a68b0e3af260071b3139cb57cee",
+        "19132e0aab9d4d6862fd42e8e6760847",
+        "b8f117818878da86b5f5e06400eb1866",
+        "0fa0420ef7bcfe4387c7e6fe226dc728",
+        "bb8cbfc16b95a4f054a3d5380e0130ed",
+        "3807545661288dcca312c9c538537b63",
+        "0a68d4e1eb24f128fccdb930000b2546",
+        "c7faad064001e646445c4c634169484d",
     )
 
     def __init__(
         self,
-        root: Path = 'data',
-        split: str = 'train',
-        bands: Sequence[str] = BAND_SETS['all'],
+        root: Path = "data",
+        split: str = "train",
+        bands: Sequence[str] = BAND_SETS["all"],
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         checksum: bool = False,
     ) -> None:
@@ -201,7 +201,7 @@ class SEN12MS(NonGeoDataset):
             AssertionError: if ``split`` argument is invalid
             DatasetNotFoundError: If dataset is not found.
         """
-        assert split in ['train', 'test']
+        assert split in ["train", "test"]
 
         self._validate_bands(bands)
         self.band_indices = torch.tensor(
@@ -219,7 +219,7 @@ class SEN12MS(NonGeoDataset):
         ) or not self._check_integrity_light():
             raise DatasetNotFoundError(self)
 
-        with open(os.path.join(self.root, split + '_list.txt')) as f:
+        with open(os.path.join(self.root, split + "_list.txt")) as f:
             self.ids = [line.rstrip() for line in f.readlines()]
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
@@ -233,14 +233,14 @@ class SEN12MS(NonGeoDataset):
         """
         filename = self.ids[index]
 
-        lc = self._load_raster(filename, 'lc').long()
-        s1 = self._load_raster(filename, 's1')
-        s2 = self._load_raster(filename, 's2')
+        lc = self._load_raster(filename, "lc").long()
+        s1 = self._load_raster(filename, "s1")
+        s2 = self._load_raster(filename, "s2")
 
         image = torch.cat(tensors=[s1, s2], dim=0)
         image = torch.index_select(image, dim=0, index=self.band_indices)
 
-        sample: dict[str, Tensor] = {'image': image, 'mask': lc[0]}
+        sample: dict[str, Tensor] = {"image": image, "mask": lc[0]}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
@@ -265,15 +265,15 @@ class SEN12MS(NonGeoDataset):
         Returns:
             the raster image or target
         """
-        parts = filename.split('_')
+        parts = filename.split("_")
         parts[2] = source
 
         with rasterio.open(
             os.path.join(
                 self.root,
-                '{}_{}'.format(*parts),
-                '{2}_{3}'.format(*parts),
-                '{}_{}_{}_{}_{}'.format(*parts),
+                "{}_{}".format(*parts),
+                "{2}_{3}".format(*parts),
+                "{}_{}_{}_{}_{}".format(*parts),
             )
         ) as f:
             array = f.read()
@@ -341,37 +341,37 @@ class SEN12MS(NonGeoDataset):
         .. versionadded:: 0.2
         """
         rgb_indices = []
-        for band in self.BAND_SETS['rgb']:
+        for band in self.BAND_SETS["rgb"]:
             if band in self.bands:
                 rgb_indices.append(self.bands.index(band))
             else:
                 raise RGBBandsMissingError()
 
-        image, mask = sample['image'][rgb_indices].numpy(), sample['mask']
+        image, mask = sample["image"][rgb_indices].numpy(), sample["mask"]
         image = percentile_normalization(image)
         ncols = 2
 
-        showing_predictions = 'prediction' in sample
+        showing_predictions = "prediction" in sample
         if showing_predictions:
-            prediction = sample['prediction']
+            prediction = sample["prediction"]
             ncols += 1
 
         fig, axs = plt.subplots(nrows=1, ncols=ncols, figsize=(10, ncols * 5))
 
         axs[0].imshow(np.transpose(image, (1, 2, 0)))
-        axs[0].axis('off')
+        axs[0].axis("off")
         axs[1].imshow(mask)
-        axs[1].axis('off')
+        axs[1].axis("off")
 
         if showing_predictions:
             axs[2].imshow(prediction)
-            axs[2].axis('off')
+            axs[2].axis("off")
 
         if show_titles:
-            axs[0].set_title('Image')
-            axs[1].set_title('Mask')
+            axs[0].set_title("Image")
+            axs[1].set_title("Mask")
             if showing_predictions:
-                axs[2].set_title('Prediction')
+                axs[2].set_title("Prediction")
 
         if suptitle is not None:
             plt.suptitle(suptitle)
@@ -403,7 +403,7 @@ class SEN12MSDataModule(PinNonGeoDataModule):
         self,
         batch_size: int = 64,
         num_workers: int = 0,
-        band_set: str = 'all',
+        band_set: str = "all",
         pin_memory: bool = True,
         **kwargs: Any,
     ) -> None:
@@ -418,20 +418,21 @@ class SEN12MSDataModule(PinNonGeoDataModule):
             **kwargs: Additional keyword arguments passed to
                 :class:`~torchgeo.datasets.SEN12MS`.
         """
-        kwargs['bands'] = SEN12MS.BAND_SETS[band_set]
+        kwargs["bands"] = SEN12MS.BAND_SETS[band_set]
 
-        if band_set == 's1':
+        if band_set == "s1":
             self.std = self.std[:2]
-            self.std = torch.tensor([self.std[0], self.std[1], self.std[1]])  # S1 bands are VV and VH but we make a composite RGB
-        elif band_set == 's2-all':
+            self.std = torch.tensor(
+                [self.std[0], self.std[1], self.std[0] - self.std[1]]
+            )  # S1 composite: VV, VH, VV-VH
+        elif band_set == "s2-all":
             self.std = self.std[2:]
-        elif band_set == 's2-reduced':
+        elif band_set == "s2-reduced":
             self.std = self.std[torch.tensor([3, 4, 5, 9, 12, 13])]
-        elif band_set == 'rgb':
+        elif band_set == "rgb":
             self.std = self.std[torch.tensor([2, 3, 4])]
 
         super().__init__(SEN12MS, batch_size, num_workers, pin_memory, **kwargs)
-
 
     def setup(self, stage: str) -> None:
         """Set up datasets.
@@ -439,10 +440,10 @@ class SEN12MSDataModule(PinNonGeoDataModule):
         Args:
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
-        if stage in ['fit', 'validate']:
-            season_to_int = {'winter': 0, 'spring': 1000, 'summer': 2000, 'fall': 3000}
+        if stage in ["fit", "validate"]:
+            season_to_int = {"winter": 0, "spring": 1000, "summer": 2000, "fall": 3000}
 
-            self.dataset = SEN12MS(split='train', **self.kwargs)
+            self.dataset = SEN12MS(split="train", **self.kwargs)
 
             # A patch is a filename like:
             #     "ROIs{num}_{season}_s2_{scene_id}_p{patch_id}.tif"
@@ -452,7 +453,7 @@ class SEN12MSDataModule(PinNonGeoDataModule):
             # as (season_id + scene_id).
             scenes = []
             for scene_fn in self.dataset.ids:
-                parts = scene_fn.split('_')
+                parts = scene_fn.split("_")
                 season_id = season_to_int[parts[1]]
                 scene_id = int(parts[3])
                 scenes.append(season_id + scene_id)
@@ -463,16 +464,19 @@ class SEN12MSDataModule(PinNonGeoDataModule):
 
             self.train_dataset = Subset(self.dataset, train_indices)
             self.val_dataset = Subset(self.dataset, val_indices)
-        if stage in ['test']:
-            self.test_dataset = SEN12MS(split='test', **self.kwargs)
-
+        if stage in ["test"]:
+            self.test_dataset = SEN12MS(split="test", **self.kwargs)
 
     def on_before_batch_transfer(self, batch: Any, dataloader_idx: int) -> Any:
-        batch['mask'] = torch.take(self.DFC2020_CLASS_MAPPING, batch['mask'])
+        batch["mask"] = torch.take(self.DFC2020_CLASS_MAPPING, batch["mask"])
 
-        if 'image' in batch and batch['image'].shape[1] == 2:  # S1 data has 2 channels (VV, VH)
-            vv_channel = batch['image'][:, 0:1, :, :]  # VV channel
-            vh_channel = batch['image'][:, 1:2, :, :]  # VH channel
-            # Create RGB composite: (VV, VH, VH)
-            batch['image'] = torch.cat([vv_channel, vh_channel, vh_channel], dim=1)
+        if (
+            "image" in batch and batch["image"].shape[1] == 2
+        ):  # S1 data has 2 channels (VV, VH)
+            vv_channel = batch["image"][:, 0:1, :, :]  # VV channel
+            vh_channel = batch["image"][:, 1:2, :, :]  # VH channel
+            diff = (
+                vv_channel - vh_channel
+            )  # VV-VH difference (equivalent to log ratio for dB values)
+            batch["image"] = torch.cat([vv_channel, vh_channel, diff], dim=1)
         return super().on_before_batch_transfer(batch, dataloader_idx)

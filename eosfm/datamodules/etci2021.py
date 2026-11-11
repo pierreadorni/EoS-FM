@@ -44,9 +44,7 @@ class ETCI2021DataModule(NonGeoDataModule):
             128.11221701,
         ]
     )
-    std = torch.tensor(
-        [89.8145088, 95.2797861, 95.2797861]
-    )
+    std = torch.tensor([89.8145088, 95.2797861, 95.2797861])
 
     def __init__(
         self, batch_size: int = 64, num_workers: int = 0, **kwargs: Any
@@ -61,7 +59,6 @@ class ETCI2021DataModule(NonGeoDataModule):
         """
         super().__init__(ETCI2021, batch_size, num_workers, **kwargs)
 
-
     def setup(self, stage: str) -> None:
         """Set up datasets.
 
@@ -69,14 +66,13 @@ class ETCI2021DataModule(NonGeoDataModule):
             stage: Either 'fit', 'validate', 'test', or 'predict'.
         """
 
-        if stage in ['fit']:
-            self.train_dataset = ETCI2021(split='train', **self.kwargs)
-        if stage in ['fit', 'validate']:
-            self.val_dataset = ETCI2021(split='val', **self.kwargs)
-        if stage in ['predict']:
+        if stage in ["fit"]:
+            self.train_dataset = ETCI2021(split="train", **self.kwargs)
+        if stage in ["fit", "validate"]:
+            self.val_dataset = ETCI2021(split="val", **self.kwargs)
+        if stage in ["predict"]:
             # Test set masks are not public, use for prediction instead
-            self.predict_dataset = ETCI2021(split='test', **self.kwargs)
-
+            self.predict_dataset = ETCI2021(split="test", **self.kwargs)
 
     def on_after_batch_transfer(
         self, batch: dict[str, Tensor], dataloader_idx: int
@@ -93,7 +89,11 @@ class ETCI2021DataModule(NonGeoDataModule):
         if self.trainer:
             if not self.trainer.predicting:
                 # Evaluate against flood mask, not water mask
-                batch['mask'] = (batch['mask'][:, 1] > 0).long()
+                batch["mask"] = (batch["mask"][:, 1] > 0).long()
+
+        # Add filename key for plotting in terratorch (required by validation_step)
+        if "filename" not in batch:
+            batch["filename"] = [f"sample_{i}" for i in range(batch["image"].shape[0])]
 
         return super().on_after_batch_transfer(batch, dataloader_idx)
 
@@ -135,33 +135,33 @@ class ETCI2021(NonGeoDataset):
         the ETCI competition.
     """
 
-    bands = ('VV', 'VH')
-    masks = ('flood', 'water_body')
+    bands = ("VV", "VH")
+    masks = ("flood", "water_body")
     metadata: ClassVar[dict[str, dict[str, str]]] = {
-        'train': {
-            'filename': 'train.zip',
-            'md5': '1e95792fe0f6e3c9000abdeab2a8ab0f',
-            'directory': 'train',
-            'url': 'https://drive.google.com/file/d/14HqNW5uWLS92n7KrxKgDwUTsSEST6LCr',
+        "train": {
+            "filename": "train.zip",
+            "md5": "1e95792fe0f6e3c9000abdeab2a8ab0f",
+            "directory": "train",
+            "url": "https://drive.google.com/file/d/14HqNW5uWLS92n7KrxKgDwUTsSEST6LCr",
         },
-        'val': {
-            'filename': 'val_with_ref_labels.zip',
-            'md5': 'fd18cecb318efc69f8319f90c3771bdf',
-            'directory': 'test',
-            'url': 'https://drive.google.com/file/d/19sriKPHCZLfJn_Jmk3Z_0b3VaCBVRVyn',
+        "val": {
+            "filename": "val_with_ref_labels.zip",
+            "md5": "fd18cecb318efc69f8319f90c3771bdf",
+            "directory": "test",
+            "url": "https://drive.google.com/file/d/19sriKPHCZLfJn_Jmk3Z_0b3VaCBVRVyn",
         },
-        'test': {
-            'filename': 'test_without_ref_labels.zip',
-            'md5': 'da9fa69e1498bd49d5c766338c6dac3d',
-            'directory': 'test_internal',
-            'url': 'https://drive.google.com/file/d/1rpMVluASnSHBfm2FhpPDio0GyCPOqg7E',
+        "test": {
+            "filename": "test_without_ref_labels.zip",
+            "md5": "da9fa69e1498bd49d5c766338c6dac3d",
+            "directory": "test_internal",
+            "url": "https://drive.google.com/file/d/1rpMVluASnSHBfm2FhpPDio0GyCPOqg7E",
         },
     }
 
     def __init__(
         self,
-        root: Path = 'data',
-        split: str = 'train',
+        root: Path = "data",
+        split: str = "train",
         transforms: Callable[[dict[str, Tensor]], dict[str, Tensor]] | None = None,
         download: bool = False,
         checksum: bool = False,
@@ -195,7 +195,6 @@ class ETCI2021(NonGeoDataset):
 
         self.files = self._load_files(self.root, self.split)
 
-
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         """Return an index within the dataset.
 
@@ -206,24 +205,24 @@ class ETCI2021(NonGeoDataset):
             data and label at that index
         """
         files = self.files[index]
-        vv = self._load_image(files['vv'])
-        vh = self._load_image(files['vh'])
-        water_mask = self._load_target(files['water_mask'])
+        vv = self._load_image(files["vv"])
+        vh = self._load_image(files["vh"])
+        water_mask = self._load_target(files["water_mask"])
 
-        if self.split != 'test':
-            flood_mask = self._load_target(files['flood_mask'])
+        if self.split != "test":
+            flood_mask = self._load_target(files["flood_mask"])
             mask = torch.stack(tensors=[water_mask, flood_mask], dim=0)
         else:
             mask = water_mask.unsqueeze(0)
 
-        image = torch.cat(tensors=[vv, vh, vh], dim=0)
-        sample = {'image': image, 'mask': mask}
+        diff = vv - vh  # VV-VH difference (equivalent to log ratio for dB values)
+        image = torch.cat(tensors=[vv, vh, diff], dim=0)
+        sample = {"image": image, "mask": mask}
 
         if self.transforms is not None:
             sample = self.transforms(sample)
 
         return sample
-
 
     def __len__(self) -> int:
         """Return the number of data points in the dataset.
@@ -232,7 +231,6 @@ class ETCI2021(NonGeoDataset):
             length of the dataset
         """
         return len(self.files)
-    
 
     def _extract_coordinates_from_vv_filename(self, filename: str) -> tuple[int, int]:
         """Extract coordinates from the filename of a VV image.
@@ -244,12 +242,12 @@ class ETCI2021(NonGeoDataset):
             coordinates extracted from the filename
         """
         # filename is ex florence_20180522t231344_x-2_y-31_vv.png
-        parts = os.path.basename(filename).split('_')
-        x_coord = parts[-3].strip('x-')
-        y_coord = parts[-2].strip('y-')
+        parts = os.path.basename(filename).split("_")
+        x_coord = parts[-3].strip("x-")
+        y_coord = parts[-2].strip("y-")
 
         return int(x_coord), int(y_coord)
-    
+
     def _extract_coordinates_from_vh_filename(self, filename: str) -> tuple[int, int]:
         """Extract coordinates from the filename of a VH image.
 
@@ -260,13 +258,15 @@ class ETCI2021(NonGeoDataset):
             coordinates extracted from the filename
         """
         # filename is ex florence_20180522t231344_x-2_y-31_vh.png
-        parts = os.path.basename(filename).split('_')
-        x_coord = parts[-3].strip('x-')
-        y_coord = parts[-2].strip('y-')
+        parts = os.path.basename(filename).split("_")
+        x_coord = parts[-3].strip("x-")
+        y_coord = parts[-2].strip("y-")
 
         return int(x_coord), int(y_coord)
 
-    def _extract_coordinates_from_label_filename(self, filename: str) -> tuple[int, int]:
+    def _extract_coordinates_from_label_filename(
+        self, filename: str
+    ) -> tuple[int, int]:
         """Extract coordinates from the filename of a label image.
 
         Args:
@@ -276,12 +276,12 @@ class ETCI2021(NonGeoDataset):
             coordinates extracted from the filename
         """
         # filename is ex florence_20180522t231344_x-2_y-31.png
-        parts = os.path.basename(filename).split('_')
-        x_coord = parts[-2].strip('x-')
-        y_coord = parts[-1].split('.')[0].strip('y-')
+        parts = os.path.basename(filename).split("_")
+        x_coord = parts[-2].strip("x-")
+        y_coord = parts[-1].split(".")[0].strip("y-")
 
         return int(x_coord), int(y_coord)
-    
+
     def _extract_coordinates_from_filename(self, filename: str) -> tuple[int, int]:
         """Extract coordinates from the filename of an image, routing to the correct extractor.
 
@@ -291,14 +291,16 @@ class ETCI2021(NonGeoDataset):
         Returns:
             coordinates extracted from the filename
         """
-        if 'vv' in filename:
+        if "vv" in filename:
             return self._extract_coordinates_from_vv_filename(filename)
-        elif 'vh' in filename:
+        elif "vh" in filename:
             return self._extract_coordinates_from_vh_filename(filename)
         else:  # label
             return self._extract_coordinates_from_label_filename(filename)
-        
-    def _generate_filenames_from_coordinates(self, x: int, y: int, folder: str) -> dict[str, str]:
+
+    def _generate_filenames_from_coordinates(
+        self, x: int, y: int, folder: str
+    ) -> dict[str, str]:
         """Generate the vv, vh, water_mask and flood_mask filenames from coordinates.
 
         Args:
@@ -309,23 +311,22 @@ class ETCI2021(NonGeoDataset):
         Returns:
             dict containing the vv, vh, water_mask and flood_mask filenames
         """
-        x_str = f'x-{x}'
-        y_str = f'y-{y}'
+        x_str = f"x-{x}"
+        y_str = f"y-{y}"
         base_filename = os.path.basename(os.path.dirname(folder))
-        prefix = f'{base_filename}_{x_str}_{y_str}'
-        
-        vv_filename = os.path.join(folder, 'vv', f'{prefix}_vv.png')
-        vh_filename = os.path.join(folder, 'vh', f'{prefix}_vh.png')
-        water_mask_filename = os.path.join(folder, 'water_body_label', f'{prefix}.png')
-        flood_mask_filename = os.path.join(folder, 'flood_label', f'{prefix}.png')
-        
-        return {
-            'vv': vv_filename,
-            'vh': vh_filename,
-            'water_mask': water_mask_filename,
-            'flood_mask': flood_mask_filename
-        }
+        prefix = f"{base_filename}_{x_str}_{y_str}"
 
+        vv_filename = os.path.join(folder, "vv", f"{prefix}_vv.png")
+        vh_filename = os.path.join(folder, "vh", f"{prefix}_vh.png")
+        water_mask_filename = os.path.join(folder, "water_body_label", f"{prefix}.png")
+        flood_mask_filename = os.path.join(folder, "flood_label", f"{prefix}.png")
+
+        return {
+            "vv": vv_filename,
+            "vh": vh_filename,
+            "water_mask": water_mask_filename,
+            "flood_mask": flood_mask_filename,
+        }
 
     def _load_files(self, root: Path, split: str) -> list[dict[str, str]]:
         """Return the paths of the files in the dataset.
@@ -339,24 +340,20 @@ class ETCI2021(NonGeoDataset):
             water body mask, flood mask (train/val only)
         """
         files = []
-        directory = self.metadata[split]['directory']
-        folders = sorted(glob.glob(os.path.join(root, directory, '*')))
-        folders = [os.path.join(folder, 'tiles') for folder in folders]
+        directory = self.metadata[split]["directory"]
+        folders = sorted(glob.glob(os.path.join(root, directory, "*")))
+        folders = [os.path.join(folder, "tiles") for folder in folders]
         for folder in folders:
-            vvs = sorted(glob.glob(os.path.join(folder, 'vv', '*.png')))
-            coordinates = [
-                self._extract_coordinates_from_filename(vv) for vv in vvs
-            ]
+            vvs = sorted(glob.glob(os.path.join(folder, "vv", "*.png")))
+            coordinates = [self._extract_coordinates_from_filename(vv) for vv in vvs]
             for coordinate in coordinates:
-                x,y = coordinate
+                x, y = coordinate
                 d = self._generate_filenames_from_coordinates(x, y, folder)
 
-                if split != 'test':
-                    files.append(
-                        d
-                    )
+                if split != "test":
+                    files.append(d)
                 else:
-                    del d['flood_mask']  # test set does not have flood masks
+                    del d["flood_mask"]  # test set does not have flood masks
                     files.append(d)
 
         return files
@@ -372,7 +369,7 @@ class ETCI2021(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('RGB'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert("RGB"))
             tensor = torch.from_numpy(array).float()
             # Convert from HxWxC to CxHxW
             tensor = tensor.permute((2, 0, 1))
@@ -390,7 +387,7 @@ class ETCI2021(NonGeoDataset):
         """
         filename = os.path.join(path)
         with Image.open(filename) as img:
-            array: np.typing.NDArray[np.int_] = np.array(img.convert('L'))
+            array: np.typing.NDArray[np.int_] = np.array(img.convert("L"))
             tensor = torch.from_numpy(array)
             tensor = torch.clamp(tensor, min=0, max=1)
             tensor = tensor.to(torch.long)
@@ -402,7 +399,7 @@ class ETCI2021(NonGeoDataset):
         Returns:
             True if the dataset directories and split files are found, else False
         """
-        directory = self.metadata[self.split]['directory']
+        directory = self.metadata[self.split]["directory"]
         dirpath = os.path.join(self.root, directory)
         if not os.path.exists(dirpath):
             return False
@@ -411,14 +408,14 @@ class ETCI2021(NonGeoDataset):
     def _download(self) -> None:
         """Download the dataset and extract it."""
         if self._check_integrity():
-            print('Files already downloaded and verified')
+            print("Files already downloaded and verified")
             return
 
         download_and_extract_archive(
-            self.metadata[self.split]['url'],
+            self.metadata[self.split]["url"],
             self.root,
-            filename=self.metadata[self.split]['filename'],
-            md5=self.metadata[self.split]['md5'] if self.checksum else None,
+            filename=self.metadata[self.split]["filename"],
+            md5=self.metadata[self.split]["md5"] if self.checksum else None,
         )
 
     def plot(
@@ -437,12 +434,12 @@ class ETCI2021(NonGeoDataset):
         Returns:
             a matplotlib Figure with the rendered sample
         """
-        vv = sample['image'][0, 0].numpy()
-        vh = sample['image'][0, 1].numpy()
-        mask = sample['mask'][0]
+        vv = sample["image"][0, 0].numpy()
+        vh = sample["image"][0, 1].numpy()
+        mask = sample["mask"][0]
 
         showing_flood_mask = mask.shape[0] == 2
-        showing_predictions = 'prediction' in sample
+        showing_predictions = "prediction" in sample
         num_panels = 3
         if showing_flood_mask:
             water_mask = mask[0].numpy()
@@ -452,37 +449,36 @@ class ETCI2021(NonGeoDataset):
             water_mask = mask.numpy()
 
         if showing_predictions:
-            predictions = sample['prediction'].numpy()
+            predictions = sample["prediction"].numpy()
             num_panels += 1
 
         fig, axs = plt.subplots(1, num_panels, figsize=(num_panels * 4, 3))
         axs[0].imshow(vv)
-        axs[0].axis('off')
+        axs[0].axis("off")
         axs[1].imshow(vh)
-        axs[1].axis('off')
+        axs[1].axis("off")
         axs[2].imshow(water_mask)
-        axs[2].axis('off')
+        axs[2].axis("off")
         if show_titles:
-            axs[0].set_title('VV')
-            axs[1].set_title('VH')
-            axs[2].set_title('Water mask')
+            axs[0].set_title("VV")
+            axs[1].set_title("VH")
+            axs[2].set_title("Water mask")
 
         idx = 0
         if showing_flood_mask:
             axs[3 + idx].imshow(flood_mask)
-            axs[3 + idx].axis('off')
+            axs[3 + idx].axis("off")
             if show_titles:
-                axs[3 + idx].set_title('Flood mask')
+                axs[3 + idx].set_title("Flood mask")
             idx += 1
 
         if showing_predictions:
             axs[3 + idx].imshow(predictions)
-            axs[3 + idx].axis('off')
+            axs[3 + idx].axis("off")
             if show_titles:
-                axs[3 + idx].set_title('Predictions')
+                axs[3 + idx].set_title("Predictions")
             idx += 1
 
         if suptitle is not None:
             plt.suptitle(suptitle)
         return fig
-

@@ -114,12 +114,24 @@ class InriaAerial(NonGeoDataset):
 
         images = sorted(glob.glob(str(root_dir / "images" / "*.tif")))
 
+        print(
+            f"Found {len(images)} images in {root_dir / 'images'} for split '{self.split}'"
+        )
+
         if split_dir == "train":
             labels = sorted(glob.glob(str(root_dir / "gt" / "*.tif")))
 
+            print(
+                f"Found {len(labels)} labels in {root_dir / 'gt'} for split '{self.split}'"
+            )
+
             for img, lbl in zip(images, labels):
-                if match := pattern.search(img):
+                # Extract filename only (without path) before applying regex
+                filename = pathlib.Path(img).stem
+                if match := pattern.search(filename):
+                    # print(f"Match ok for image: {img} (filename: {filename})")
                     idx = int(match.group(2))
+                    # print(f"Extracted index {idx} from filename {filename}")
                     # For validation, use the first 5 images of every location
                     if self.split == "train" and idx > 5:
                         files.append(
@@ -268,7 +280,13 @@ class InriaAerial(NonGeoDataset):
         )
         image_display = image_display.astype(np.uint8)
 
+        # Check if predictions are available
         ncols = 2
+        showing_predictions = "prediction" in sample
+        if showing_predictions:
+            prediction = sample["prediction"].numpy()
+            ncols += 1
+
         fig, axs = plt.subplots(1, ncols, figsize=(ncols * 5, 5))
 
         axs[0].imshow(image_display)
@@ -276,11 +294,17 @@ class InriaAerial(NonGeoDataset):
         axs[1].imshow(mask, cmap="gray", vmin=0, vmax=1)
         axs[1].axis("off")
 
+        if showing_predictions:
+            axs[2].imshow(prediction, cmap="gray", vmin=0, vmax=1)
+            axs[2].axis("off")
+
         if show_titles:
             band_names = {0: "R", 1: "G", 2: "B"}
             band_str = "".join([band_names.get(b, str(b)) for b in self.bands])
             axs[0].set_title(f"Image ({band_str})")
-            axs[1].set_title("Mask (Building)")
+            axs[1].set_title("Target")
+            if showing_predictions:
+                axs[2].set_title("Prediction")
 
         if suptitle:
             plt.suptitle(suptitle)

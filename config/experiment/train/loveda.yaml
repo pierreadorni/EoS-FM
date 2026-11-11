@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/loveda/version_6/checkpoints/epoch=99-step=15700.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -8,6 +10,15 @@ data:
   num_workers: 8
   root: data/loveda
   download: true
+
+normalization:
+  mean: [74.04743641, 79.63683167, 76.02396539]
+  std: [41.35765102, 36.77994722, 35.30092324]
+
+bands:
+  - R
+  - G
+  - B
 
 trainer:
   max_epochs: 100

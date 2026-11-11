@@ -1,266 +1,182 @@
 <div align="center">
 
-# EoS-FM: Can an Ensemble of Specialist Models Act as a Generalist Feature Extractor?
+# EoS-FM
 
-[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa] [![arXiv](https://img.shields.io/badge/arXiv-2511.21523-b31b1b.svg)](https://arxiv.org/abs/2511.21523)
-</div>
+### Can an Ensemble of Specialist Models Act as a Generalist Feature Extractor?
 
-<p align='center'>
-  <img src="https://github.com/user-attachments/assets/f62362c9-edd7-440c-b160-28c92d731ae8" width="80%"/>
+[![ECCV 2026](https://img.shields.io/badge/ECCV-2026-4b44ce.svg)](https://doi.org/10.1007/978-3-032-37624-4_28)
+[![arXiv](https://img.shields.io/badge/arXiv-2511.21523-b31b1b.svg)](https://arxiv.org/abs/2511.21523)
+[![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97_Hugging_Face-Weights-ffd21e.svg)](https://huggingface.co/pierreadorni/eos-fm)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.6%2B-ee4c2c?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
+
+**Pierre Adorni · Minh-Tan Pham · Stéphane May · Sébastien Lefèvre**
+
+IRISA, Université Bretagne Sud · CNES · UiT The Arctic University of Norway
+
+**Published at [ECCV 2026](https://doi.org/10.1007/978-3-032-37624-4_28)**
+
+<p>
+  <a href="https://doi.org/10.1007/978-3-032-37624-4_28"><b>📄 Paper</b></a> &nbsp;·&nbsp;
+  <a href="https://huggingface.co/pierreadorni/eos-fm"><b>🤗 Weights</b></a> &nbsp;·&nbsp;
+  <a href="#use-the-checkpoint-in-your-framework"><b>⚡ Inference</b></a> &nbsp;·&nbsp;
+  <a href="#train-specialists"><b>🛠 Training</b></a>
 </p>
 
-An ensemble foundation model for Earth Observation that aggregates features from multiple specialist backbone encoders to achieve generalist capabilities across diverse remote sensing tasks.
+</div>
 
-## Overview
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f62362c9-edd7-440c-b160-28c92d731ae8" alt="EoS-FM performance and model size on the Pangaea benchmark" width="80%"/>
+  <br>
+  <sub>An ensemble of 22 specialists for Earth observation.</sub>
+</p>
 
-EoS-FM addresses a fundamental question in remote sensing foundation models: rather than training a single large generalist model on massive amounts of data, can we ensemble multiple specialist models trained on different tasks and band combinations to achieve comparable or better generalist performance?
+EoS-FM combines specialist encoders trained on Earth observation datasets. This
+repository provides specialist training and a standalone PyTorch encoder for
+integration into other frameworks.
 
-### Key Innovation
+## Install
 
-The `EosFM` encoder implements a **late fusion ensemble** approach:
-- **Specialist Models**: Multiple pre-trained backbone networks, each trained on different datasets and band combinations (RGB, multispectral, SAR)
-- **Band Adaptation Layer**: Automatically adapts input bands to match each specialist's requirements using rule-based strategies
-- **Feature Concatenation**: Combines specialist features channel-wise at each pyramid level for downstream decoders
-- **Encoder Selection Layer**: Selects an optimal subset of encoders to automatically prune the encoder at training time
-
-## Installation
+Inference requires Python 3.10+, PyTorch and timm:
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -e .
-
-# Install additional dependencies (adjust based on your needs)
-pip install terratorch torchgeo lightning rasterio torch torchvision
 ```
 
-## Quick Start
-
-### Training a Model
+For specialist training and checkpoint export:
 
 ```bash
-# Set up environment
-source venv/bin/activate
-export PYTHONPATH=$(pwd):$PYTHONPATH
-
-# Train on a dataset (e.g., Cloud Cover)
-python run.py experiment=train/cloud_cover
-
-# List all available experiments
-python run.py --help | grep "experiment"
-
-# Available experiments: ben_rgb, ben_s1, ben_all, caffe, cloud_cover, deepglobe_lcc, 
-# dfc2022, dior, etci2021, eurosat_rgb, eurosat_s2, firerisk, inria_aerial, 
-# kenya_croptype, landcoverai, levircdplus, loveda, minifrance, opencanopy, oscd, 
-# potsdam, sen12ms_rgb, sen12ms_s1, sen12ms_s2, sen12ms_all
+pip install -e ".[training]"
 ```
 
-### Dry Run (Verify Configuration)
+## Use the checkpoint in your framework
 
-```bash
-# Check that configuration is valid without training
-python run.py experiment=train/potsdam train=false
+Download [`eosfm.pth`](https://huggingface.co/pierreadorni/eos-fm/resolve/main/eosfm.pth)
+from [Hugging Face](https://huggingface.co/pierreadorni/eos-fm) and save it as
+`release/eosfm.pth`. This replaces the previous checkpoint and is paired with the
+inference code in this repository. The 22-specialist checkpoint has SHA-256:
+
+```text
+51d15c6ac0a39914780d78df3f9f953b4482f189c27c57398ae4cb75c0d850b0
 ```
 
-### Using EosFM Ensemble Backbone
-
-```yaml
-# Example: in conf/experiment/my_experiment.yaml
-defaults:
-  - override /model: segmentation
-
-data:
-  _target_: eosfm.datamodules.MyDataModule
-  batch_size: 32
-  num_workers: 8
-  root: /path/to/data
-
-trainer:
-  max_epochs: 100
-  accelerator: auto
-  devices: auto
-  precision: bf16-mixed
-
-logger:
-  name: my_experiment
-
-model:
-  model_args:
-    backbone: EosFM
-    backbone_in_chans: 3
-    model_weights: models/eosfm.pth
-    freeze: true  # Freeze encoders during training (recommended)
-    num_classes: 6
-  loss: dice
-```
-
-#### Advanced Feature Fusion Examples
-
-**1. Basic Concatenation (Default)**
-```yaml
-model:
-  model_args:
-    backbone: EosFM
-    num_classes: 6
-```
-
-**2. Encoder Selection with Top-K**
-```yaml
-model:
-  model_args:
-    backbone: EosFM
-    max_encoders: 5  # Select only 5 most relevant encoders
-    num_classes: 6
-```
-
-**3. Feature Normalization**
-```yaml
-model:
-  model_args:
-    backbone: EosFM
-    normalize_features: true
-    normalization_type: "batch"  # "batch" or "layer"
-    num_classes: 6
-```
-
-### Creating Ensemble .pth Files
-
-The ensemble file format is a list of tuples: `[(in_chans, state_dict, config), ...]`
-
-The `utils.py` script provides utilities to load and export ensemble models from a folder of trained Lightning checkpoints:
-
-```bash
-# Export all trained models from an experiments folder to an ensemble .pth file
-python utils.py export \
-  --encoders-folder experiments/train \
-  --output-path eosfm_ensemble.pth
-```
-
-This command:
-- Recursively loads all Lightning checkpoints from `experiments/train`
-- Extracts encoder weights and configurations from each checkpoint
-- Automatically detects the input channels and backbone architecture
-- Saves them in the correct ensemble format
-
-
-## Supported Datasets
-
-Custom datamodules in `eosfm/datamodules/`:
-- **Potsdam2D**: Urban semantic segmentation (RGBIR, 6000×6000 images)
-- **MiniFrance**: Land cover classification
-- **SEN12MS**: Multi-modal Sentinel-1/2 with land cover labels
-- **BigEarthNetV2**: Multi-label classification
-- **ETCI2021**: Flood detection
-- And more...
-
-Also supports TorchGeo datasets: EuroSAT, DeepGlobe, FireRisk, OSCD, etc.
-
-## Creating Custom Datasets
+The weights are hosted separately from the code. The
+[release manifest](release/eosfm.manifest.json) records their specialist
+inventory and provenance.
 
 ```python
-class MyDataModule(PinNonGeoDataModule):
-    def setup(self, stage):
-        if stage in ['fit', 'validate']:
-            self.train_dataset = MyDataset(use_tiling=False)  # Random crops
-            self.val_dataset = MyDataset(use_tiling=True)     # Systematic tiling
+import torch
+from eosfm import EosFM
+
+bands = ["B2", "B3", "B4", "B8", "B11", "B12"]
+model = EosFM(
+    input_bands={"optical": bands},
+    input_size=64,
+    encoder_weights="release/eosfm.pth",
+    normalize_features=False,
+    feature_fusion=None,
+    projection_layer=False,
+    max_encoders=None,
+    torch_compile=False,
+).eval()
+
+# images: float32 [batch, len(bands), height, width], already standardized
+# with statistics fitted on your downstream training split.
+images = torch.randn(2, len(bands), 64, 64)
+with torch.no_grad():
+    feature_maps = model(images)
+    embeddings = feature_maps[-1].mean(dim=(-2, -1))
 ```
 
-## Configuration
+The example returns four concatenated feature stages. With all 22 specialists,
+they have 880, 1760, 3520 and 7040 channels; final-stage global average pooling
+produces a 7040-dimensional embedding. FP32 is the reference inference precision.
 
-Configurations use **Hydra** for composable, modular setup. Each experiment is self-contained with data, model, and trainer configurations.
+For mixed inputs, set `input_bands={"optical": [...], "sar": ["VV", "VH"]}`.
+A tensor must contain optical channels first, then SAR, in the listed order.
+Alternatively pass `{"optical": optical_tensor, "sar": sar_tensor}` with each
+value shaped `[batch, channels, height, width]`.
 
-### Example Experiment Configuration
+Band adaptation uses exact names, wavelength matching, band expressions and
+fallbacks for missing bands. Expressions operate on the supplied standardized
+channels. The encoder does not reapply specialist training statistics. Missing
+Kenya `CLD` uses the optical fallback. Fit downstream input statistics on training
+data only.
 
-Each experiment is a minimal YAML file that specifies data, model, and training settings:
+`normalize_features=True` enables spatial feature BatchNorm. Its running
+statistics must be fitted on downstream training data and frozen for evaluation.
+Learned fusion, projection and selection require downstream training; their
+weights are not included in the specialist checkpoint. The example above uses
+raw frozen features.
 
-```yaml
-# config/experiment/train/cloud_cover.yaml
-# @package _global_
-defaults:
-  - override /model: segmentation
+For direct integration without installing this package, copy
+[`eosfm/encoder.py`](eosfm/encoder.py) into your framework and import `EosFM` from
+that file. It requires only PyTorch, timm and Python's standard library. This is
+the same implementation used by the package; TerraTorch is only needed for training.
 
-data:
-  _target_: eosfm.datamodules.CloudCoverDetectionDataModule
-  batch_size: 32
-  num_workers: 4
-  root: data/cloud_cover
+## Train specialists
 
-trainer:
-  max_epochs: 20
-  check_val_every_n_epoch: 1
-
-logger:
-  name: cloud_cover
-
-model:
-  model_args:
-    num_classes: 2
-  loss: ce
-```
-
-### Creating Custom Experiments
-
-1. Create a new YAML file in `config/experiment/train/`:
-
-```yaml
-# config/experiment/train/my_dataset.yaml
-# @package _global_
-defaults:
-  - override /model: segmentation
-
-data:
-  _target_: my.custom.DataModule
-  batch_size: 32
-  num_workers: 8
-  root: /path/to/data
-
-trainer:
-  max_epochs: 100
-
-logger:
-  name: my_dataset
-
-model:
-  model_args:
-    num_classes: 10
-    backbone: timm_convnextv2_atto
-  loss: dice
-```
-
-2. Run the experiment:
+Training uses `run.py` and the recipes in `config/experiment/train/`. Set each
+dataset's local root and download settings before launching a run:
 
 ```bash
-python run.py experiment=train/my_dataset
-
-# Or override specific settings from CLI:
-python run.py experiment=train/my_dataset trainer.max_epochs=50 data.batch_size=64
+python run.py experiment=train/ben_s1 data.root=/path/to/bigearthnet
+python run.py experiment=train/ben_all data.root=/path/to/bigearthnet
+python run.py experiment=train/cloud_cover data.root=/path/to/cloud_cover
 ```
 
-### Command Line Overrides
+Each recipe specifies the task, input bands and normalization, model settings,
+optimizer and training schedule. These are current recipes; source references in
+comments do not certify every historical training detail. Run logs, checkpoints
+and the resolved configuration are saved under `experiments/train/`.
 
-Override any configuration value from the command line:
+To inspect a recipe without training:
 
 ```bash
-# Override epochs, batch size, learning rate
-python run.py experiment=train/potsdam trainer.max_epochs=200 data.batch_size=16
-
-# Disable training, only validate
-python run.py experiment=train/potsdam train=false
-
-# Run a dry run to verify configuration
-python run.py experiment=train/potsdam train=false test=false --cfg job
+python run.py experiment=train/ben_s1 --cfg job
 ```
 
-## Carbon Tracking
+Export newly trained specialists to the inference checkpoint format:
 
-Training automatically tracks CO₂ emissions via [CodeCarbon](https://github.com/mlco2/codecarbon). The energy consumption and estimated CO₂eq for this project are detailed below. Note that these **are not the values for a single training of the model**, but rather for all of the trial and error runs during the project, up to the final full training run.
+```bash
+python scripts/export_checkpoint.py \
+  --encoders-folder experiments/train \
+  --output-path release/my-eosfm.pth
+```
 
-| Total emissions   	        | Total energy consumed      	|
-|-----------------------------	|-----------------------------	|
-| 4.15 kg CO₂eq                	| 76.05 kWh                   	|
+The exporter takes the latest numbered run and latest epoch/step checkpoint per
+specialist. Point it at a directory containing only the specialist runs you intend
+to release. It preserves the saved band labels and normalization; historical
+configs with incorrect labels must be corrected before export. Only local,
+trusted training checkpoints should be used as export inputs. The exported
+artifact contains backbone weights and plain metadata and loads with
+`torch.load(..., weights_only=True)`.
+
+A frozen downstream classifier example is available via:
+
+```bash
+python run.py experiment=test/test_eurosat \
+  data.root=/path/to/eurosat \
+  model.model_args.backbone_encoder_weights=release/eosfm.pth
+```
+
+This trains a classifier over raw frozen features. EuroSAT and BigEarthNet overlap
+specialist supervision, so their results are not independent transfer evaluations.
+
+`run.py` registers EoS-FM with TerraTorch automatically. If you build a TerraTorch
+model in your own code, call `from eosfm import register_terratorch` followed by
+`register_terratorch()` before constructing it.
+
+## Checks
+
+```bash
+python -m unittest discover -s tests
+```
+
+The default checks use synthetic specialists. Full-checkpoint and TerraTorch
+integration checks are opt-in using `EOSFM_RELEASE_CHECKPOINT` and
+`EOSFM_TEST_TRAINING`, respectively; see the test module docstrings.
 
 ## License
 
@@ -277,15 +193,20 @@ This work is licensed under a
 
 Contributions welcome! Please:
 1. Follow the existing code structure
-3. Update configs and documentation
+2. Update configs and documentation
 
 ## Citing this work
 
-```
-@article{adorni2025eos,
-  title={EoS-FM: Can an Ensemble of Specialist Models act as a Generalist Feature Extractor?},
+```bibtex
+@inproceedings{adorni2026eos,
+  title={EoS-FM: Can an Ensemble of Specialist Models Act as a Generalist Feature Extractor?},
   author={Adorni, Pierre and Pham, Minh-Tan and May, St{\'e}phane and Lef{\`e}vre, S{\'e}bastien},
-  journal={arXiv preprint arXiv:2511.21523},
-  year={2025}
+  booktitle={Computer Vision -- ECCV 2026},
+  series={Lecture Notes in Computer Science},
+  volume={17028},
+  pages={464--482},
+  publisher={Springer Nature Switzerland},
+  year={2026},
+  doi={10.1007/978-3-032-37624-4_28}
 }
 ```

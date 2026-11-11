@@ -2,7 +2,11 @@
 
 import logging
 import warnings
-from torch import nn
+from typing import List
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 from terratorch.models.model import (
     AuxiliaryHead,
@@ -19,6 +23,8 @@ from terratorch.registry import (
     DECODER_REGISTRY,
     MODEL_FACTORY_REGISTRY,
 )
+
+from eosfm.ltae import MultiScaleLTAE
 
 logger = logging.getLogger("terratorch")
 
@@ -291,3 +297,229 @@ def _build_change_detection_model(
         rescale=rescale,
         auxiliary_heads=auxiliary_heads,
     )
+
+
+# ---------------------------------------------------------------------------
+# Temporal model: encoder + LTAE + decoder
+# ---------------------------------------------------------------------------
+
+
+class TemporalPixelWiseModel(Model, nn.Module):
+    """Model that processes a [B, T, C, H, W] image sequence.
+
+    For each timestep, the backbone extracts multi-scale features.  The
+    per-level temporal sequences are then fused via MultiScaleLTAE before
+    being passed to the decoder and head.
+
+    Follows the same pattern as terratorch's ``PixelWiseModel``: the head is
+    built in ``__init__`` using ``decoder.out_channels``, which every terratorch
+    decoder exposes after construction.
+
+    Args:
+        task: Must be "segmentation".
+        backbone: Feature extractor; called with [B, C, H, W], returns a list
+            of feature maps at different pyramid levels.
+        ltae: MultiScaleLTAE that fuses temporal features at each pyramid level.
+        decoder: Decoder that accepts the fused feature list.  Must expose
+            ``out_channels`` after construction.
+        head_kwargs: Kwargs forwarded to ``SegmentationHead``.  ``in_channels``
+            is taken from ``decoder.out_channels`` automatically.  Pass
+            ``None`` or ``{}`` when the decoder already includes a head.
+        rescale: Bilinearly rescale the final output to the input H×W.
+    """
+
+    def __init__(
+        self,
+        task: str,
+        backbone: nn.Module,
+        ltae: MultiScaleLTAE,
+        decoder: nn.Module,
+        head_kwargs: dict | None = None,
+        rescale: bool = True,
+    ):
+        super().__init__()
+        self.task = task
+        self.encoder = backbone
+        self.ltae = ltae
+        self.decoder = decoder
+        self.rescale = rescale
+
+        # Build head immediately using decoder.out_channels, exactly like PixelWiseModel
+        if head_kwargs:
+            from terratorch.models.heads import SegmentationHead
+
+            self.head: nn.Module = SegmentationHead(
+                in_channels=decoder.out_channels, **head_kwargs
+            )
+        else:
+            self.head = nn.Identity()
+
+    def forward(self, images: torch.Tensor, **kwargs) -> "ModelOutput":  # type: ignore[name-defined]
+        from terratorch.models.model import ModelOutput
+
+        # images: [B, T, C, H, W]  or  [B, C, H, W] (T=1 fall-back)
+        if images.ndim == 4:
+            images = images.unsqueeze(1)
+
+        B, T, C, H, W = images.shape
+
+        # --- encode each timestep separately ---
+        per_level: list[list[torch.Tensor]] | None = None
+
+        for t in range(T):
+            feats = self.encoder(images[:, t])  # list of [B, C_l, H_l, W_l]
+            if per_level is None:
+                per_level = [[] for _ in feats]
+            for lvl, f in enumerate(feats):
+                per_level[lvl].append(f)
+
+        # stack -> [B, T, C_l, H_l, W_l]
+        temporal_feats = [torch.stack(lvl, dim=1) for lvl in per_level]
+
+        # --- LTAE fusion ---
+        fused = self.ltae(temporal_feats)  # list of [B, C_l, H_l, W_l]
+
+        # --- decode + head ---
+        decoder_output = self.decoder(fused)
+        if isinstance(decoder_output, (list, tuple)):
+            decoder_output = decoder_output[0]
+
+        output = self.head(decoder_output)
+
+        if self.rescale and output.shape[-2:] != (H, W):
+            output = F.interpolate(
+                output, size=(H, W), mode="bilinear", align_corners=False
+            )
+
+        return ModelOutput(output=output)
+
+    def freeze_encoder(self):
+        for p in self.encoder.parameters():
+            p.requires_grad_(False)
+
+    def freeze_decoder(self):
+        for p in self.decoder.parameters():
+            p.requires_grad_(False)
+        for p in self.head.parameters():
+            p.requires_grad_(False)
+
+
+@MODEL_FACTORY_REGISTRY.register
+class TemporalEncoderDecoderFactory(ModelFactory):
+    """Factory that builds backbone + MultiScaleLTAE + decoder for time series.
+
+    The LTAE fuses T per-timestep feature maps at each pyramid level.
+    All other arguments mirror ``EncoderDecoderFactory``.
+
+    Extra model_args understood by this factory:
+        ltae_n_head (int): Number of temporal attention heads (default 4).
+        ltae_d_k (int): Key dimension per head (default 4).
+        ltae_dropout (float): Attention dropout (default 0.1).
+        ltae_T (int): Positional encoding max period (default 1000).
+    """
+
+    def build_model(
+        self,
+        task: str,
+        backbone: str | nn.Module,
+        decoder: str | nn.Module,
+        backbone_kwargs: dict | None = None,
+        decoder_kwargs: dict | None = None,
+        head_kwargs: dict | None = None,
+        num_classes: int | None = None,
+        necks: list[dict] | None = None,
+        aux_decoders: list | None = None,
+        rescale: bool = True,
+        peft_config: dict | None = None,
+        ltae_n_head: int = 4,
+        ltae_d_k: int = 4,
+        ltae_dropout: float = 0.1,
+        ltae_T: int = 1000,
+        **kwargs,
+    ) -> Model:
+        task = task.lower()
+        if task != "segmentation":
+            raise ValueError(
+                f"TemporalEncoderDecoderFactory only supports segmentation, got {task}"
+            )
+
+        if not backbone_kwargs:
+            backbone_kwargs, kwargs = extract_prefix_keys(kwargs, "backbone_")
+        if not decoder_kwargs:
+            decoder_kwargs, kwargs = extract_prefix_keys(kwargs, "decoder_")
+        if not head_kwargs:
+            head_kwargs, kwargs = extract_prefix_keys(kwargs, "head_")
+
+        # Build backbone
+        backbone_net = _get_backbone(backbone, **backbone_kwargs)
+
+        if peft_config is not None:
+            backbone_net = get_peft_backbone(peft_config, backbone_net)
+
+        try:
+            out_channels: list[int] = list(backbone_net.out_channels)
+        except AttributeError as e:
+            raise AttributeError("backbone must have out_channels attribute") from e
+
+        # Necks (optional)
+        if necks:
+            neck_list, channel_list = build_neck_list(necks, out_channels)
+        else:
+            neck_list, channel_list = [], out_channels
+
+        # LTAE
+        ltae = MultiScaleLTAE(
+            channel_list=channel_list,
+            n_head=ltae_n_head,
+            d_k=ltae_d_k,
+            dropout=ltae_dropout,
+            T=ltae_T,
+        )
+
+        # Decoder (same channel list as backbone output — LTAE preserves dims)
+        decoder_net, head_kwargs_out, decoder_includes_head = (
+            _get_decoder_and_head_kwargs(
+                decoder,
+                channel_list,
+                decoder_kwargs,
+                head_kwargs,
+                num_classes=num_classes,
+            )
+        )
+
+        _check_all_args_used(kwargs)
+
+        # Wrap backbone + optional neck into a single module
+        if neck_list:
+            neck_module: nn.Module = NeckSequential(*neck_list)
+            wrapped_backbone = _BackboneWithNeck(backbone_net, neck_module)
+        else:
+            wrapped_backbone = backbone_net
+
+        # Pass head_kwargs only if the decoder doesn't already include a head.
+        # TemporalPixelWiseModel reads decoder.out_channels for in_channels,
+        # following the same pattern as terratorch's PixelWiseModel.
+        effective_head_kwargs = head_kwargs_out if not decoder_includes_head else {}
+
+        return TemporalPixelWiseModel(
+            task=task,
+            backbone=wrapped_backbone,
+            ltae=ltae,
+            decoder=decoder_net,
+            head_kwargs=effective_head_kwargs,
+            rescale=rescale,
+        )
+
+
+class _BackboneWithNeck(nn.Module):
+    """Thin wrapper to apply a neck after the backbone."""
+
+    def __init__(self, backbone: nn.Module, neck: nn.Module):
+        super().__init__()
+        self.backbone = backbone
+        self.neck = neck
+        if hasattr(backbone, "out_channels"):
+            self.out_channels = backbone.out_channels
+
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
+        return self.neck(self.backbone(x))

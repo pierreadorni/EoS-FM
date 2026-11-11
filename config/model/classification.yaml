@@ -5,6 +5,7 @@ model_args:
   backbone_pretrained: True
   decoder: IdentityDecoder
   num_classes: ???
+loss: ce
 ignore_index: -1
 freeze_backbone: false
 freeze_decoder: false

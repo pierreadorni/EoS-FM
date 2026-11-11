@@ -1,23 +1,48 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/kenya-croptype/version_31/checkpoints/epoch=199-step=1001.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
-  - override /model: segmentation
+  - override /model: multitemporal_segmentation
 
 data:
   _target_: eosfm.datamodules.CV4AKenyaCropTypeDataModule
-  batch_size: 32
-  patch_size: 512
+  batch_size: 64
   num_workers: 8
   root: data/cv4a-kenya-crop-type
+  download: False
+  pin_memory: True
+
+normalization:
+  mean: [0.06598704, 0.07360381, 0.10059358, 0.09254979, 0.14706411, 0.27304998, 0.31328234, 0.31256072, 0.33630628, 0.34900353, 0.25621468, 0.16756303, 3.4733504]
+  std:  [0.11055796, 0.10908846, 0.10097974, 0.09989752, 0.09890717, 0.08709492, 0.08703060, 0.08877592, 0.08602162, 0.14418258, 0.07731038, 0.07609952, 16.72267723]
+
+# 12 S2 optical bands plus cloud probability (CLD), not 13 S2 spectral bands.
+# The current temporal normalization path requires a separate runtime audit/fix.
+bands:
+  - B1
+  - B2
+  - B3
+  - B4
+  - B5
+  - B6
+  - B7
+  - B8
+  - B8A
+  - B9
+  - B11
+  - B12
+  - CLD
 
 trainer:
-  max_epochs: 100
+  max_epochs: 200
   check_val_every_n_epoch: 1
-  log_every_n_steps: 50
+  log_every_n_steps: 1
 
 logger:
-  name: kenya-croptype
+  name: kenya-croptype-ltae
 
 model:
+  ignore_index: 0
   model_args:
-    num_classes: 7
-  loss: dice
+    backbone_in_chans: 13
+    num_classes: 8

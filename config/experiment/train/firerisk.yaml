@@ -1,13 +1,24 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/firerisk/version_5/checkpoints/epoch=49-step=54900.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: classification
 
 data:
   _target_: torchgeo.datamodules.FireRiskDataModule
   batch_size: 64
-  num_workers: 24
+  num_workers: 12
   root: data/firerisk
   download: true
+
+normalization:
+  mean: [84.62519754, 107.69800658, 102.59053248]
+  std: [31.16378485, 35.74003352, 44.20090736]
+
+bands:
+  - R
+  - G
+  - B
 
 trainer:
   max_epochs: 50

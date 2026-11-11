@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/potsdam/version_2/checkpoints/epoch=99-step=7500.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -9,7 +11,16 @@ data:
   num_workers: 8
   val_split_pct: 0.5
   bands: [3, 0, 1]
-  root: /share/projects/datasets/Potsdam
+  root: data/Potsdam
+
+normalization:
+  mean: [99.7261301, 87.00314226, 92.49686609]
+  std: [37.03224587, 35.93922634, 35.2668439]
+
+bands:
+  - IR
+  - R
+  - G
 
 trainer:
   max_epochs: 100

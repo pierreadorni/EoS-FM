@@ -7,7 +7,23 @@ name = "eosfm"
 version = "0.1.0"
 description = "EoS-FM package"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.6",
+    "timm>=1.0",
+]
+
+[project.optional-dependencies]
+training = [
+    "terratorch",
+    "hydra-core",
+    "kornia",
+    "codecarbon",
+    "tensorboard",
+]
+# Only needed to read trusted, historical checkpoints. Release checkpoints use
+# plain Python metadata and load safely without OmegaConf.
+legacy = ["omegaconf"]
 
 [tool.setuptools.packages.find]
 include = ["eosfm*"]

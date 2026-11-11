@@ -1,0 +1,36 @@
+defaults:
+  - _self_
+  - model: null
+  - data: null
+  - experiment: null
+
+seed: 0
+train: true
+test: false
+ckpt_path: null
+
+callbacks:
+  - _target_: lightning.pytorch.callbacks.TQDMProgressBar
+  - _target_: lightning.pytorch.callbacks.LearningRateMonitor
+    logging_interval: epoch
+
+logger:
+  _target_: lightning.pytorch.loggers.TensorBoardLogger
+  save_dir: experiments/train
+  name: default
+
+trainer:
+  _target_: lightning.pytorch.Trainer
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  # Specialist-training recipe; the frozen-feature example overrides this with FP32.
+  precision: bf16-mixed
+  max_epochs: 10
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 50
+  enable_checkpointing: true
+  default_root_dir: experiments
+  logger: ${logger}
+  callbacks: ${callbacks}

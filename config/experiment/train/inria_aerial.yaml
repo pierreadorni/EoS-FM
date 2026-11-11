@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/inria_aerial/version_21/checkpoints/epoch=19-step=19380.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
@@ -10,6 +12,16 @@ data:
   num_workers: 8
   pin_memory: true
   root: data
+
+normalization:
+  mean: [103.66568898, 109.08492642, 100.43484282]
+  std: [51.23012484, 46.62307735, 44.84063043]
+
+bands:
+  - R
+  - G
+  - B
+
 
 trainer:
   max_epochs: 20

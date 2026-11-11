@@ -1,13 +1,24 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/caffe/version_14/checkpoints/epoch=99-step=40900.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: segmentation
 
 data:
   _target_: eosfm.datamodules.CaFFeDataModule
   batch_size: 32
-  num_workers: 24
+  num_workers: 4
   root: data/caffe
   download: true
+
+normalization:
+  mean: [62.03758643,62.03758643,62.03758643]
+  std: [79.77651954,79.77651954,79.77651954]
+
+bands:
+  - VV
+  - VV
+  - VV  # CaFFe has a single SAR VV channel duplicated x3
 
 trainer:
   max_epochs: 100
@@ -21,3 +32,4 @@ model:
   model_args:
     num_classes: 7
   loss: dice
+  plot_on_val: True

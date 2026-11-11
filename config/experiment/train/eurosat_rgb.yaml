@@ -1,4 +1,6 @@
 # @package _global_
+# Model settings checked against the 22-specialist source: experiments/train/eurosat/version_4/checkpoints/epoch=9-step=2530.ckpt
+# These are current training recipes; this reference does not certify historical preprocessing.
 defaults:
   - override /model: classification
 
@@ -8,6 +10,15 @@ data:
   num_workers: 0
   bands: ["B04", "B03", "B02"]
   root: data/eurosat
+
+normalization:
+  mean: [947.49144443, 1042.86600048, 1118.20467932]
+  std: [593.70918482, 395.07381548, 332.99637283]
+
+bands:
+  - B04
+  - B03
+  - B02
 
 trainer:
   max_epochs: 10

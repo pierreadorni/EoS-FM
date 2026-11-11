@@ -7,8 +7,18 @@ data:
   batch_size: 32
   patch_size: 64
   num_workers: 4
+  bands: ["B04", "B03", "B02"]
   root: data/oscd
   download: true
+
+normalization:
+  mean: [1346.21163241, 1318.6298137, 1386.71634982, 1318.18467711, 1298.03497643, 1380.95512929]
+  std: [787.81315408, 553.40846367, 427.0174337, 816.07871859, 577.05422864, 441.09875292]
+
+bands:
+  - B04
+  - B03
+  - B02
 
 trainer:
   max_epochs: 100

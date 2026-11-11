@@ -54,8 +54,7 @@ pip install -e ".[training]"
 
 Download [`eosfm.pth`](https://huggingface.co/pierreadorni/eos-fm/resolve/main/eosfm.pth)
 from [Hugging Face](https://huggingface.co/pierreadorni/eos-fm) and save it as
-`release/eosfm.pth`. This replaces the previous checkpoint and is paired with the
-inference code in this repository. The 22-specialist checkpoint has SHA-256:
+`release/eosfm.pth`. The 22-specialist checkpoint has SHA-256:
 
 ```text
 51d15c6ac0a39914780d78df3f9f953b4482f189c27c57398ae4cb75c0d850b0
@@ -63,7 +62,7 @@ inference code in this repository. The 22-specialist checkpoint has SHA-256:
 
 The weights are hosted separately from the code. The
 [release manifest](release/eosfm.manifest.json) records their specialist
-inventory and provenance.
+inventory, band order and normalization statistics.
 
 ```python
 import torch
